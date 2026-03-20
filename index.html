@@ -15,8 +15,6 @@
       --danger: #ff4747;
       --warn: #ffad1f;
       --success: #54ff92;
-      --maze: rgba(130, 160, 190, 0.18);
-      --maze-edge: rgba(180, 210, 245, 0.26);
     }
 
     * {
@@ -74,7 +72,7 @@
     }
 
     .titleBox {
-      max-width: min(520px, 58vw);
+      max-width: min(540px, 60vw);
     }
 
     .titleBox h1 {
@@ -85,8 +83,7 @@
 
     .titleBox p,
     .statusText,
-    .smallText,
-    .desc {
+    .smallText {
       margin: 0;
       color: var(--muted);
       line-height: 1.4;
@@ -94,7 +91,7 @@
     }
 
     .statusBox {
-      min-width: min(360px, 42vw);
+      min-width: min(390px, 44vw);
     }
 
     .statusHeading {
@@ -139,7 +136,7 @@
     }
 
     .card {
-      width: min(1040px, 100%);
+      width: min(1060px, 100%);
       max-height: 95vh;
       overflow: auto;
       border-radius: 24px;
@@ -164,7 +161,7 @@
 
     .grid {
       display: grid;
-      grid-template-columns: 1.1fr 0.9fr;
+      grid-template-columns: 1.08fr 0.92fr;
       gap: 16px;
     }
 
@@ -293,7 +290,7 @@
 
     .miniStats {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 10px;
       margin-top: 12px;
     }
@@ -313,7 +310,7 @@
     }
 
     .miniStat strong {
-      font-size: 20px;
+      font-size: 18px;
       line-height: 1;
     }
 
@@ -334,14 +331,15 @@
       position: absolute;
       right: 10px;
       bottom: max(10px, env(safe-area-inset-bottom));
-      width: min(340px, calc(100vw - 20px));
+      width: min(350px, calc(100vw - 20px));
       display: grid;
       gap: 10px;
       pointer-events: auto;
     }
 
     .legend,
-    .touchControls {
+    .touchControls,
+    .boostPanel {
       background: var(--panel);
       border: 1px solid var(--panel-border);
       border-radius: 18px;
@@ -407,7 +405,7 @@
       transform: translate(-50%, -50%);
     }
 
-    @media (max-width: 900px) {
+    @media (max-width: 950px) {
       .grid {
         grid-template-columns: 1fr;
       }
@@ -438,11 +436,15 @@
       }
 
       .bottomRight {
-        width: min(270px, calc(100vw - 20px));
+        width: min(280px, calc(100vw - 20px));
       }
 
       .touchPad {
         width: min(180px, 42vw);
+      }
+
+      .miniStats {
+        grid-template-columns: 1fr;
       }
     }
   </style>
@@ -454,24 +456,26 @@
     <div class="topBar">
       <div class="panel titleBox">
         <h1>Shadow Chase</h1>
-        <p>Dark maze survival. You only see what falls inside the light. Spot a player who is not facing you to trigger the hunt. Survive long enough and the hunter can turn into a boss.</p>
+        <p>Move through the dark maze with a clear halo of light around you. Find players who are facing away. Survive the hunter, the boss phase, and escape through the corner doors.</p>
       </div>
       <div class="panel statusBox">
         <div class="statusHeading">
           <div id="phasePill" class="pill dot" style="color: var(--accent);">Setup</div>
           <div id="clockPill" class="pill">180s</div>
         </div>
-        <p id="statusText" class="statusText">Use GitHub Pages for this version. True live online multiplayer needs a backend.</p>
+        <p id="statusText" class="statusText">This version focuses on visibility, AI opponents, mobile controls, and atmosphere.</p>
       </div>
     </div>
 
     <div class="bottomRight">
       <div class="legend">
-        <div class="legendRow"><span class="legendLabel"><span class="swatch" style="color:#66d1ff;background:#66d1ff"></span>Explorer</span><span>Roaming quietly</span></div>
-        <div class="legendRow"><span class="legendLabel"><span class="swatch" style="color:#ffad1f;background:#ffad1f"></span>Hunter</span><span>Faster with pulse</span></div>
-        <div class="legendRow"><span class="legendLabel"><span class="swatch" style="color:#ff4747;background:#ff4747"></span>Hunted</span><span>Bigger light radius</span></div>
-        <div class="legendRow"><span class="legendLabel"><span class="swatch" style="color:#ff2f2f;background:#ff2f2f"></span>Boss</span><span>Too large for holes</span></div>
+        <div class="legendRow"><span class="legendLabel"><span class="swatch" style="color:#66d1ff;background:#66d1ff"></span>Your light</span><span>Only clear visible zone</span></div>
+        <div class="legendRow"><span class="legendLabel"><span class="swatch" style="color:#ffd34d;background:#ffd34d"></span>Treasure</span><span>30s light boost</span></div>
+        <div class="legendRow"><span class="legendLabel"><span class="swatch" style="color:#ffad1f;background:#ffad1f"></span>Hunter</span><span>Fast pulse ring</span></div>
+        <div class="legendRow"><span class="legendLabel"><span class="swatch" style="color:#ff2f2f;background:#ff2f2f"></span>Boss</span><span>Heavy footsteps</span></div>
       </div>
+
+      <div class="boostPanel smallText" id="boostText">No light boost active.</div>
 
       <div class="touchControls">
         <div class="smallText">Touch movement pad for Player 1</div>
@@ -485,7 +489,7 @@
   <div class="overlay" id="menuOverlay">
     <div class="card">
       <h2>Shadow Chase</h2>
-      <p>This version is the right choice for GitHub Pages because it is plain HTML, CSS, and JavaScript. Keep using that for now. Real time multiplayer with separate people joining the site at the same moment is possible, but it needs a backend service and cannot run as a GitHub Pages only site. So this build focuses on stronger AI play, mobile controls that actually work, maze hiding spots, escape doors, and a boss phase.</p>
+      <p>This build increases the visible halo around the player, dims everything outside that halo much more aggressively, adds temporary light treasures, and adds monster footstep audio when the boss is near. It is still a GitHub Pages friendly HTML, CSS, and JavaScript game.</p>
 
       <div class="grid">
         <div class="section">
@@ -496,11 +500,11 @@
         <div class="section">
           <h3>Round settings</h3>
           <div class="controlsList">
-            <div><strong>Maze visibility</strong><br />The maze is visible, but dim. Other players are only visible when they are inside visible light.</div>
-            <div><strong>Hunter trigger</strong><br />See someone who is not facing you and the hunt begins.</div>
-            <div><strong>Boss phase</strong><br />At 4 minutes the current hunter becomes a giant red boss if a hunt is active.</div>
-            <div><strong>Holes in walls</strong><br />Regular players can slip through small openings. The boss cannot fit.</div>
-            <div><strong>Escape doors</strong><br />Corner doors unlock after the timer threshold. Reach one to escape.</div>
+            <div><strong>Visibility fix</strong><br />The player now has a much more readable halo. The maze inside your light is visible. Outside your halo is heavily obscured.</div>
+            <div><strong>Treasure boost</strong><br />Collect glowing treasure to increase your light for 30 seconds.</div>
+            <div><strong>Boss audio</strong><br />When the boss is close behind you, you hear heavy footsteps.</div>
+            <div><strong>AI mode</strong><br />You can set up the other players as AI and play immediately.</div>
+            <div><strong>Doors and holes</strong><br />Regular players can use narrow gaps. The boss cannot.</div>
           </div>
 
           <div class="sliderRow">
@@ -511,6 +515,7 @@
           <div class="miniStats">
             <div class="miniStat"><span>Players</span><strong id="playerCountStat">4</strong></div>
             <div class="miniStat"><span>AI Players</span><strong id="aiCountStat">3</strong></div>
+            <div class="miniStat"><span>Treasures</span><strong id="treasureCountStat">6</strong></div>
           </div>
 
           <div class="winnerBox" id="winnerBox"></div>
@@ -542,8 +547,10 @@
     const winnerBox = document.getElementById('winnerBox');
     const playerCountStat = document.getElementById('playerCountStat');
     const aiCountStat = document.getElementById('aiCountStat');
+    const treasureCountStat = document.getElementById('treasureCountStat');
     const touchPad = document.getElementById('touchPad');
     const touchKnob = document.getElementById('touchKnob');
+    const boostText = document.getElementById('boostText');
 
     const CHARACTER_OPTIONS = [
       { key: 'dragon', label: 'Dragon', emoji: '🐉', color: '#66d1ff' },
@@ -603,7 +610,11 @@
       visiblePlayers: new Set(),
       mazeWalls: [],
       holes: [],
-      doors: []
+      doors: [],
+      treasures: [],
+      audioStarted: false,
+      audioContext: null,
+      bossStepTimer: 0
     };
 
     const keyState = {};
@@ -646,6 +657,40 @@
       canvas.style.width = window.innerWidth + 'px';
       canvas.style.height = window.innerHeight + 'px';
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    function initAudio() {
+      if (state.audioStarted) return;
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextClass) return;
+      state.audioContext = new AudioContextClass();
+      state.audioStarted = true;
+    }
+
+    function playBossStep(volume = 0.12) {
+      const audio = state.audioContext;
+      if (!audio) return;
+      const now = audio.currentTime;
+
+      const osc = audio.createOscillator();
+      const gain = audio.createGain();
+      const filter = audio.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.value = 280;
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(58, now);
+      osc.frequency.exponentialRampToValueAtTime(42, now + 0.11);
+
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(volume, now + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.16);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(audio.destination);
+      osc.start(now);
+      osc.stop(now + 0.17);
     }
 
     window.addEventListener('resize', resizeCanvas);
@@ -706,32 +751,43 @@
       const doorSize = 92;
       const doorInset = 70;
       state.doors = [
-        { x: doorInset, y: doorInset, w: doorSize, h: doorSize, label: 'NW', escaped: [] },
-        { x: W - doorInset - doorSize, y: doorInset, w: doorSize, h: doorSize, label: 'NE', escaped: [] },
-        { x: doorInset, y: H - doorInset - doorSize, w: doorSize, h: doorSize, label: 'SW', escaped: [] },
-        { x: W - doorInset - doorSize, y: H - doorInset - doorSize, w: doorSize, h: doorSize, label: 'SE', escaped: [] }
+        { x: doorInset, y: doorInset, w: doorSize, h: doorSize, label: 'NW' },
+        { x: W - doorInset - doorSize, y: doorInset, w: doorSize, h: doorSize, label: 'NE' },
+        { x: doorInset, y: H - doorInset - doorSize, w: doorSize, h: doorSize, label: 'SW' },
+        { x: W - doorInset - doorSize, y: H - doorInset - doorSize, w: doorSize, h: doorSize, label: 'SE' }
       ];
 
       state.mazeWalls = walls;
       state.holes = holes;
     }
 
-    function rectsOverlap(a, b) {
-      return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+    function spawnTreasures() {
+      const positions = [
+        { x: 280, y: 1180 },
+        { x: 770, y: 230 },
+        { x: 1200, y: 860 },
+        { x: 1540, y: 480 },
+        { x: 1830, y: 1230 },
+        { x: 2130, y: 250 }
+      ];
+      state.treasures = positions.map((p, i) => ({
+        id: i,
+        x: p.x,
+        y: p.y,
+        radius: 16,
+        active: true,
+        pulse: Math.random() * Math.PI * 2
+      }));
+    }
+
+    function pointInRect(px, py, rect) {
+      return px >= rect.x && px <= rect.x + rect.w && py >= rect.y && py <= rect.y + rect.h;
     }
 
     function circleRectCollision(cx, cy, r, rect) {
       const nearestX = clamp(cx, rect.x, rect.x + rect.w);
       const nearestY = clamp(cy, rect.y, rect.y + rect.h);
       return dist(cx, cy, nearestX, nearestY) < r;
-    }
-
-    function bossCanUseHole() {
-      return false;
-    }
-
-    function pointInRect(px, py, rect) {
-      return px >= rect.x && px <= rect.x + rect.w && py >= rect.y && py <= rect.y + rect.h;
     }
 
     function createPlayer(index, config) {
@@ -757,8 +813,8 @@
         radius: 22,
         facing: Math.random() * Math.PI * 2,
         baseSpeed: 165,
-        baseLight: 120,
-        lightRadius: 120,
+        baseLight: 88,
+        lightRadius: 88,
         targetX: spawn.x,
         targetY: spawn.y,
         aiRetargetTimer: 0,
@@ -766,14 +822,15 @@
         chasePulse: 0,
         status: 'idle',
         escaped: false,
-        visible: false,
         alive: true,
-        caughtCount: 0
+        caughtCount: 0,
+        boostTimer: 0
       };
     }
 
     function rebuildPlayers() {
       makeMaze();
+      spawnTreasures();
       state.players = settings.players.map((p, i) => createPlayer(i, p));
       state.chase = null;
       state.boss = null;
@@ -782,6 +839,7 @@
       state.roundEnded = false;
       state.winnerText = '';
       state.visiblePlayers = new Set();
+      state.bossStepTimer = 0;
       winnerBox.className = 'winnerBox';
       winnerBox.innerHTML = '';
     }
@@ -821,6 +879,7 @@
       const aiCount = settings.players.filter(p => p.control === 'ai').length;
       playerCountStat.textContent = String(settings.players.length);
       aiCountStat.textContent = String(aiCount);
+      treasureCountStat.textContent = String(state.treasures.length || 6);
       roundDurationLabel.textContent = String(settings.roundSeconds);
     }
 
@@ -841,6 +900,8 @@
     });
 
     function startRound() {
+      initAudio();
+      if (state.audioContext?.state === 'suspended') state.audioContext.resume();
       rebuildPlayers();
       state.running = true;
       state.paused = false;
@@ -863,27 +924,28 @@
       if (!state.running || state.roundEnded) return;
       state.paused = false;
       menuOverlay.style.display = 'none';
+      if (state.audioContext?.state === 'suspended') state.audioContext.resume();
       updateHud();
     }
 
     startBtn.addEventListener('click', startRound);
     resumeBtn.addEventListener('click', resumeRound);
 
-    function applyWallCollisions(player, oldX, oldY, isBoss = false) {
+    function applyWallCollisions(entity, oldX, oldY, isBoss = false) {
       for (const wall of state.mazeWalls) {
-        if (circleRectCollision(player.x, player.y, player.radius, wall)) {
+        if (circleRectCollision(entity.x, entity.y, entity.radius, wall)) {
           let insideHole = false;
           if (!isBoss) {
             for (const hole of state.holes) {
-              if (pointInRect(player.x, player.y, hole)) {
+              if (pointInRect(entity.x, entity.y, hole)) {
                 insideHole = true;
                 break;
               }
             }
           }
           if (!insideHole) {
-            player.x = oldX;
-            player.y = oldY;
+            entity.x = oldX;
+            entity.y = oldY;
             return;
           }
         }
@@ -958,11 +1020,11 @@
       if (player.aiRetargetTimer <= 0) {
         player.aiRetargetTimer = 0.45 + Math.random() * 0.9;
 
-        if (state.doorsOpen && !state.boss) {
-          const door = doorTargetFor(player);
-          player.targetX = door.x + door.w / 2;
-          player.targetY = door.y + door.h / 2;
-        } else if (state.doorsOpen && boss) {
+        const nearbyTreasure = state.treasures.find(t => t.active && dist(player.x, player.y, t.x, t.y) < 260);
+        if (nearbyTreasure && player.boostTimer <= 0 && Math.random() < 0.75) {
+          player.targetX = nearbyTreasure.x;
+          player.targetY = nearbyTreasure.y;
+        } else if (state.doorsOpen) {
           const door = doorTargetFor(player);
           player.targetX = door.x + door.w / 2;
           player.targetY = door.y + door.h / 2;
@@ -1010,6 +1072,11 @@
         let light = player.baseLight;
         player.status = 'idle';
 
+        if (player.boostTimer > 0) {
+          player.boostTimer -= dt;
+          light += 82;
+        }
+
         if (state.chase) {
           if (state.chase.chaserId === player.id) {
             speed *= 1.12;
@@ -1017,7 +1084,7 @@
             player.chasePulse += dt * 8;
           }
           if (state.chase.targetId === player.id) {
-            light *= 1.45;
+            light += 34;
             player.status = 'hunted';
             player.dangerPulse += dt * 9;
           }
@@ -1037,6 +1104,20 @@
           const targetFacing = Math.atan2(player.vy, player.vx);
           const diff = targetFacing - player.facing;
           player.facing = lerp(player.facing, player.facing + Math.atan2(Math.sin(diff), Math.cos(diff)), Math.min(1, dt * 10));
+        }
+      }
+    }
+
+    function updateTreasures(dt) {
+      for (const treasure of state.treasures) treasure.pulse += dt * 3.2;
+      for (const player of state.players) {
+        if (!player.alive || player.escaped) continue;
+        for (const treasure of state.treasures) {
+          if (!treasure.active) continue;
+          if (dist(player.x, player.y, treasure.x, treasure.y) < player.radius + treasure.radius + 4) {
+            treasure.active = false;
+            player.boostTimer = 30;
+          }
         }
       }
     }
@@ -1117,9 +1198,22 @@
 
       if (dist(boss.x, boss.y, target.x, target.y) < boss.radius + target.radius + 6) {
         target.alive = false;
-        if (target.id === 0) {
-          endRound('The boss caught Player 1.');
-        }
+        if (target.id === 0) endRound('The boss caught Player 1.');
+      }
+    }
+
+    function updateBossAudio(dt) {
+      const viewer = state.players[0];
+      if (!viewer || !viewer.alive || viewer.escaped || !state.boss || !state.audioContext) return;
+      const boss = state.boss;
+      const d = dist(viewer.x, viewer.y, boss.x, boss.y);
+      if (d > 420) return;
+      state.bossStepTimer -= dt;
+      const interval = d < 170 ? 0.26 : d < 280 ? 0.38 : 0.52;
+      if (state.bossStepTimer <= 0) {
+        const volume = d < 170 ? 0.18 : d < 280 ? 0.13 : 0.09;
+        playBossStep(volume);
+        state.bossStepTimer = interval;
       }
     }
 
@@ -1160,26 +1254,20 @@
 
     function updateDoors() {
       const elapsed = settings.roundSeconds - state.timeLeft;
-      if (!state.doorsOpen && elapsed >= 120) {
-        state.doorsOpen = true;
-      }
-
+      if (!state.doorsOpen && elapsed >= 120) state.doorsOpen = true;
       if (!state.doorsOpen) return;
+
       for (const player of state.players) {
         if (!player.alive || player.escaped) continue;
         for (const door of state.doors) {
           const cx = door.x + door.w / 2;
           const cy = door.y + door.h / 2;
-          if (dist(player.x, player.y, cx, cy) < 38) {
-            player.escaped = true;
-          }
+          if (dist(player.x, player.y, cx, cy) < 38) player.escaped = true;
         }
       }
 
       const activePlayers = state.players.filter(p => p.alive && !p.escaped);
-      if (activePlayers.length === 0) {
-        endRound('Everybody reached the doors and got free.');
-      }
+      if (activePlayers.length === 0) endRound('Everybody reached the doors and got free.');
     }
 
     function updateVisibility() {
@@ -1187,33 +1275,29 @@
       const viewer = state.players[0];
       if (!viewer || !viewer.alive || viewer.escaped) return;
 
+      state.visiblePlayers.add(viewer.id);
       for (const player of state.players) {
-        if (!player.alive || player.escaped) continue;
-        if (player.id === viewer.id) {
-          state.visiblePlayers.add(player.id);
-          continue;
-        }
+        if (!player.alive || player.escaped || player.id === viewer.id) continue;
         const d = dist(viewer.x, viewer.y, player.x, player.y);
-        if (d <= viewer.lightRadius + 20 && hasLineOfSight(viewer, player)) {
-          state.visiblePlayers.add(player.id);
-        }
+        if (d <= viewer.lightRadius + 18 && hasLineOfSight(viewer, player)) state.visiblePlayers.add(player.id);
       }
 
       if (state.boss) {
         const d = dist(viewer.x, viewer.y, state.boss.x, state.boss.y);
-        if (d <= viewer.lightRadius + 30 && hasLineOfSight(viewer, state.boss)) {
-          state.visiblePlayers.add('boss');
-        }
+        if (d <= viewer.lightRadius + 25 && hasLineOfSight(viewer, state.boss)) state.visiblePlayers.add('boss');
       }
     }
 
     function updateHud() {
       clockPill.textContent = Math.max(0, Math.ceil(state.timeLeft)) + 's';
+      const player = state.players[0];
+      if (player && player.boostTimer > 0) boostText.textContent = `Light boost active for ${Math.ceil(player.boostTimer)}s.`;
+      else boostText.textContent = 'No light boost active.';
 
       if (!state.running && !state.roundEnded) {
         phasePill.textContent = 'Setup';
         phasePill.style.color = 'var(--accent)';
-        statusText.textContent = 'GitHub Pages version. Strong AI and mobile support. Real online multiplayer comes later with a backend.';
+        statusText.textContent = 'Stronger player halo, AI opponents, mobile controls, treasures, and boss footsteps are ready.';
         return;
       }
 
@@ -1234,7 +1318,7 @@
       if (state.boss) {
         phasePill.textContent = 'Boss';
         phasePill.style.color = 'var(--danger)';
-        statusText.textContent = state.doorsOpen ? 'The boss is active. Reach a corner door to escape.' : 'The hunter became a giant red boss. Use maze holes to evade it.';
+        statusText.textContent = state.doorsOpen ? 'The boss is hunting. Listen for footsteps and reach a corner door.' : 'The boss is active. Use narrow wall gaps to slip away.';
         return;
       }
 
@@ -1250,19 +1334,19 @@
       if (state.doorsOpen) {
         phasePill.textContent = 'Doors';
         phasePill.style.color = 'var(--success)';
-        statusText.textContent = 'The corner doors are open. Reach one to get free.';
+        statusText.textContent = 'The corner doors are open. Get out if you can.';
         return;
       }
 
       phasePill.textContent = 'Hidden';
       phasePill.style.color = 'var(--accent)';
-      statusText.textContent = 'Move carefully. Other players only appear inside your visible light.';
+      statusText.textContent = 'Only your halo reveals the maze and nearby players.';
     }
 
     function drawBackground() {
       ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
       const gradient = ctx.createLinearGradient(0, 0, 0, window.innerHeight);
-      gradient.addColorStop(0, '#09101d');
+      gradient.addColorStop(0, '#08111f');
       gradient.addColorStop(1, '#020307');
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
@@ -1272,32 +1356,49 @@
       ctx.save();
       ctx.translate(-state.camera.x, -state.camera.y);
 
-      ctx.fillStyle = 'rgba(255,255,255,0.02)';
       for (let x = 0; x < state.arena.width; x += 120) {
         for (let y = 0; y < state.arena.height; y += 120) {
-          ctx.fillRect(x + 6, y + 6, 2, 2);
+          ctx.fillStyle = 'rgba(255,255,255,0.018)';
+          ctx.fillRect(x + 7, y + 7, 2.5, 2.5);
         }
       }
 
       for (const wall of state.mazeWalls) {
-        ctx.fillStyle = 'rgba(120, 150, 180, 0.18)';
+        ctx.fillStyle = 'rgba(128, 164, 200, 0.22)';
         ctx.fillRect(wall.x, wall.y, wall.w, wall.h);
-        ctx.strokeStyle = 'rgba(180, 210, 245, 0.24)';
+        ctx.strokeStyle = 'rgba(195, 220, 255, 0.3)';
         ctx.lineWidth = 2;
         ctx.strokeRect(wall.x, wall.y, wall.w, wall.h);
       }
 
       for (const hole of state.holes) {
-        ctx.fillStyle = 'rgba(90, 255, 170, 0.10)';
+        ctx.fillStyle = 'rgba(90, 255, 170, 0.12)';
         ctx.fillRect(hole.x, hole.y, hole.w, hole.h);
       }
 
       for (const door of state.doors) {
-        ctx.fillStyle = state.doorsOpen ? 'rgba(84,255,146,0.22)' : 'rgba(255,255,255,0.06)';
+        ctx.fillStyle = state.doorsOpen ? 'rgba(84,255,146,0.24)' : 'rgba(255,255,255,0.06)';
         ctx.fillRect(door.x, door.y, door.w, door.h);
         ctx.strokeStyle = state.doorsOpen ? 'rgba(84,255,146,0.55)' : 'rgba(255,255,255,0.12)';
         ctx.lineWidth = 3;
         ctx.strokeRect(door.x, door.y, door.w, door.h);
+      }
+
+      for (const treasure of state.treasures) {
+        if (!treasure.active) continue;
+        const glow = 0.5 + 0.5 * Math.sin(treasure.pulse);
+        ctx.beginPath();
+        ctx.arc(treasure.x, treasure.y, treasure.radius + glow * 5, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255,211,77,${0.18 + glow * 0.18})`;
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(treasure.x, treasure.y, treasure.radius, 0, Math.PI * 2);
+        ctx.fillStyle = '#ffd34d';
+        ctx.fill();
+        ctx.font = '20px system-ui';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('💎', treasure.x, treasure.y + 1);
       }
 
       ctx.restore();
@@ -1312,6 +1413,14 @@
         if (!state.visiblePlayers.has(player.id)) continue;
 
         const pulseAlpha = 0.5 + 0.5 * Math.sin((player.status === 'hunter' ? player.chasePulse : player.dangerPulse) * 1.2);
+
+        if (player.boostTimer > 0) {
+          ctx.beginPath();
+          ctx.arc(player.x, player.y, player.radius + 22 + pulseAlpha * 4, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(255,211,77,${0.28 + pulseAlpha * 0.25})`;
+          ctx.lineWidth = 5;
+          ctx.stroke();
+        }
 
         if (player.status === 'hunter') {
           ctx.beginPath();
@@ -1340,7 +1449,7 @@
         ctx.beginPath();
         ctx.moveTo(player.x, player.y);
         ctx.lineTo(player.x + Math.cos(player.facing) * 30, player.y + Math.sin(player.facing) * 30);
-        ctx.strokeStyle = 'rgba(255,255,255,0.75)';
+        ctx.strokeStyle = 'rgba(255,255,255,0.78)';
         ctx.lineWidth = 3;
         ctx.stroke();
 
@@ -1386,32 +1495,46 @@
       const viewer = state.players[0];
       if (!viewer || !viewer.alive || viewer.escaped) return;
 
-      ctx.save();
-      ctx.fillStyle = 'rgba(0,0,0,0.9)';
-      ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
-      ctx.globalCompositeOperation = 'destination-out';
-
       const visibleEntities = [viewer];
       for (const player of state.players) {
         if (player.id !== viewer.id && state.visiblePlayers.has(player.id)) visibleEntities.push(player);
       }
-      if (state.boss && state.visiblePlayers.has('boss')) visibleEntities.push({ x: state.boss.x, y: state.boss.y, lightRadius: 95 });
+      if (state.boss && state.visiblePlayers.has('boss')) visibleEntities.push({ x: state.boss.x, y: state.boss.y, lightRadius: 98 });
+      for (const treasure of state.treasures) {
+        if (!treasure.active) continue;
+        if (dist(viewer.x, viewer.y, treasure.x, treasure.y) <= viewer.lightRadius + 22) {
+          visibleEntities.push({ x: treasure.x, y: treasure.y, lightRadius: 42 });
+        }
+      }
+
+      ctx.save();
+      ctx.fillStyle = 'rgba(0,0,0,0.96)';
+      ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
+      ctx.globalCompositeOperation = 'destination-out';
 
       for (const entity of visibleEntities) {
         const sx = entity.x - state.camera.x;
         const sy = entity.y - state.camera.y;
         const radius = entity.lightRadius || 100;
-        const grad = ctx.createRadialGradient(sx, sy, 12, sx, sy, radius);
-        grad.addColorStop(0, 'rgba(255,255,255,0.92)');
-        grad.addColorStop(0.28, 'rgba(255,255,255,0.45)');
-        grad.addColorStop(0.7, 'rgba(255,255,255,0.14)');
+        const grad = ctx.createRadialGradient(sx, sy, 4, sx, sy, radius);
+        grad.addColorStop(0, 'rgba(255,255,255,0.99)');
+        grad.addColorStop(0.22, 'rgba(255,255,255,0.86)');
+        grad.addColorStop(0.5, 'rgba(255,255,255,0.38)');
+        grad.addColorStop(0.78, 'rgba(255,255,255,0.11)');
         grad.addColorStop(1, 'rgba(255,255,255,0)');
         ctx.fillStyle = grad;
         ctx.beginPath();
         ctx.arc(sx, sy, radius, 0, Math.PI * 2);
         ctx.fill();
       }
+      ctx.restore();
 
+      ctx.save();
+      ctx.strokeStyle = 'rgba(160, 220, 255, 0.28)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(viewer.x - state.camera.x, viewer.y - state.camera.y, viewer.lightRadius, 0, Math.PI * 2);
+      ctx.stroke();
       ctx.restore();
     }
 
@@ -1472,7 +1595,7 @@
       state.roundEnded = true;
       state.winnerText = message;
       winnerBox.className = 'winnerBox show';
-      winnerBox.innerHTML = `<strong>${message}</strong><div class="smallText" style="margin-top:8px;">Press Start round to play again. For now this is the GitHub Pages AI version. Real online multiplayer would be the next phase.</div>`;
+      winnerBox.innerHTML = `<strong>${message}</strong><div class="smallText" style="margin-top:8px;">Press Start round to play again. This file is ready for direct GitHub upload.</div>`;
       menuOverlay.style.display = 'flex';
       resumeBtn.style.display = 'none';
       updateHud();
@@ -1489,9 +1612,11 @@
           endRound('Time expired. Darkness wins.');
         } else {
           updatePlayers(dt);
+          updateTreasures(dt);
           updateChaseLogic(dt);
           triggerBossIfNeeded();
           updateBoss(dt);
+          updateBossAudio(dt);
           updateDoors();
           updateVisibility();
           updateCamera(dt);
@@ -1550,6 +1675,8 @@
     ['pointerdown', 'pointermove'].forEach(type => {
       touchPad.addEventListener(type, (event) => {
         event.preventDefault();
+        initAudio();
+        if (state.audioContext?.state === 'suspended') state.audioContext.resume();
         if (type === 'pointerdown') touchPad.setPointerCapture(event.pointerId);
         setTouchVectorFromPoint(event.clientX, event.clientY);
       }, { passive: false });
@@ -1577,6 +1704,8 @@
 
     canvas.addEventListener('pointerdown', (event) => {
       if (!state.running || state.paused) return;
+      initAudio();
+      if (state.audioContext?.state === 'suspended') state.audioContext.resume();
       dragActive = true;
       const point = arenaPointFromEvent(event);
       const player = state.players[0];
