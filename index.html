@@ -1,0 +1,1296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Shadow Chase</title>
+  <style>
+    :root {
+      --bg: #05070d;
+      --panel: rgba(12, 16, 28, 0.92);
+      --panel-border: rgba(255, 255, 255, 0.08);
+      --text: #f4f7fb;
+      --muted: #a7b0c4;
+      --accent: #66d1ff;
+      --danger: #ff4747;
+      --success: #4cff8f;
+      --warn: #ff9f1c;
+      --shadow: rgba(0, 0, 0, 0.35);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      touch-action: none;
+    }
+
+    html,
+    body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: radial-gradient(circle at top, #0d1630 0%, #05070d 55%, #020307 100%);
+      color: var(--text);
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      position: relative;
+    }
+
+    #gameCanvas {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      display: block;
+    }
+
+    .hud {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .topBar {
+      position: absolute;
+      top: max(12px, env(safe-area-inset-top));
+      left: 12px;
+      right: 12px;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      justify-content: space-between;
+      pointer-events: none;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      box-shadow: 0 12px 36px var(--shadow);
+      backdrop-filter: blur(14px);
+      border-radius: 18px;
+      padding: 12px 14px;
+      pointer-events: auto;
+    }
+
+    .titleBox {
+      max-width: min(420px, 58vw);
+    }
+
+    .titleBox h1 {
+      margin: 0 0 4px 0;
+      font-size: clamp(20px, 2.6vw, 26px);
+      line-height: 1.05;
+      letter-spacing: 0.02em;
+    }
+
+    .titleBox p,
+    .statusText,
+    .smallText {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.35;
+      font-size: clamp(12px, 1.7vw, 14px);
+    }
+
+    .statusBox {
+      min-width: min(340px, 40vw);
+    }
+
+    .statusHeading {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .pill.dot::before {
+      content: "";
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: currentColor;
+      box-shadow: 0 0 12px currentColor;
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: rgba(0, 0, 0, 0.46);
+      backdrop-filter: blur(10px);
+      z-index: 10;
+    }
+
+    .card {
+      width: min(980px, 100%);
+      max-height: min(94vh, 1100px);
+      overflow: auto;
+      border-radius: 24px;
+      background: rgba(8, 12, 22, 0.96);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 28px 80px rgba(0, 0, 0, 0.55);
+      padding: 22px;
+    }
+
+    .card h2 {
+      margin: 0 0 8px 0;
+      font-size: clamp(28px, 5vw, 42px);
+      line-height: 1;
+    }
+
+    .card > p {
+      margin: 0 0 18px 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.45;
+    }
+
+    .grid {
+      display: grid;
+      gap: 16px;
+      grid-template-columns: 1.15fr 0.85fr;
+    }
+
+    .section {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 18px;
+      padding: 16px;
+    }
+
+    .section h3 {
+      margin: 0 0 12px 0;
+      font-size: 18px;
+    }
+
+    .playerList {
+      display: grid;
+      gap: 12px;
+    }
+
+    .playerCard {
+      display: grid;
+      gap: 10px;
+      padding: 12px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .playerTop {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .playerTop strong {
+      font-size: 15px;
+    }
+
+    .row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    select,
+    button,
+    input[type="range"] {
+      font: inherit;
+      border: 0;
+      outline: none;
+    }
+
+    select,
+    .btn,
+    .ghostBtn {
+      min-height: 44px;
+      border-radius: 14px;
+    }
+
+    select {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+      padding: 10px 12px;
+      min-width: 140px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .btn,
+    .ghostBtn {
+      cursor: pointer;
+      padding: 12px 16px;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      transition: transform 0.15s ease, opacity 0.15s ease, background 0.15s ease;
+    }
+
+    .btn:active,
+    .ghostBtn:active {
+      transform: translateY(1px) scale(0.99);
+    }
+
+    .btn {
+      color: #04111a;
+      background: linear-gradient(135deg, #79f7ff 0%, #77ffaa 100%);
+    }
+
+    .ghostBtn {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .controlsList {
+      display: grid;
+      gap: 10px;
+    }
+
+    .controlsList div {
+      padding: 11px 12px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      line-height: 1.45;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .controlsList strong {
+      color: var(--text);
+    }
+
+    .bottomRight {
+      position: absolute;
+      right: 12px;
+      bottom: max(12px, env(safe-area-inset-bottom));
+      width: min(330px, calc(100vw - 24px));
+      pointer-events: auto;
+      display: grid;
+      gap: 10px;
+    }
+
+    .legend,
+    .touchControls {
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: 18px;
+      padding: 12px;
+      box-shadow: 0 12px 36px var(--shadow);
+      backdrop-filter: blur(14px);
+    }
+
+    .legendRow {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      padding: 7px 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .legendRow + .legendRow {
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .swatch {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      margin-right: 8px;
+      box-shadow: 0 0 10px currentColor;
+      flex: 0 0 auto;
+    }
+
+    .legendLabel {
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .touchControls {
+      display: none;
+    }
+
+    .touchPad {
+      position: relative;
+      width: min(220px, 52vw);
+      aspect-ratio: 1;
+      margin: 4px auto 0 auto;
+      border-radius: 50%;
+      background: radial-gradient(circle at center, rgba(255,255,255,0.09) 0%, rgba(255,255,255,0.03) 55%, rgba(255,255,255,0.02) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      touch-action: none;
+      overflow: hidden;
+    }
+
+    .touchKnob {
+      position: absolute;
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, rgba(255,255,255,0.5), rgba(102,209,255,0.55));
+      border: 1px solid rgba(255,255,255,0.2);
+      box-shadow: 0 14px 24px rgba(0,0,0,0.35);
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .sliderRow {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      background: transparent;
+    }
+
+    .footerBtns {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+    }
+
+    .winnerBox {
+      margin-top: 16px;
+      padding: 14px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      display: none;
+    }
+
+    .winnerBox.show {
+      display: block;
+    }
+
+    .miniStats {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .miniStat {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 14px;
+      padding: 10px 12px;
+    }
+
+    .miniStat span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+
+    .miniStat strong {
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    @media (max-width: 900px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .topBar {
+        flex-direction: column;
+      }
+
+      .titleBox,
+      .statusBox {
+        max-width: 100%;
+        width: 100%;
+      }
+
+      .bottomRight {
+        width: min(340px, calc(100vw - 24px));
+      }
+    }
+
+    @media (hover: none) and (pointer: coarse) {
+      .touchControls {
+        display: block;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .card {
+        padding: 16px;
+      }
+
+      .panel {
+        padding: 10px 12px;
+        border-radius: 16px;
+      }
+
+      .bottomRight {
+        gap: 8px;
+      }
+
+      .legend {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas"></canvas>
+
+  <div class="hud">
+    <div class="topBar">
+      <div class="panel titleBox">
+        <h1>Shadow Chase</h1>
+        <p>Stay hidden in the dark. Catch players who are not facing you. Once spotted, the hunted player gets more light. The chaser gets more speed.</p>
+      </div>
+      <div class="panel statusBox">
+        <div class="statusHeading">
+          <div id="phasePill" class="pill dot" style="color: var(--accent);">Setup</div>
+          <div id="clockPill" class="pill">90s</div>
+        </div>
+        <p id="statusText" class="statusText">Pick characters and start a round.</p>
+      </div>
+    </div>
+
+    <div class="bottomRight">
+      <div class="legend">
+        <div class="legendRow"><span class="legendLabel"><span class="swatch" style="color:#66d1ff;background:#66d1ff"></span>Calm</span><span>Free roaming</span></div>
+        <div class="legendRow"><span class="legendLabel"><span class="swatch" style="color:#ff9f1c;background:#ff9f1c"></span>Chaser</span><span>Blinking gold ring</span></div>
+        <div class="legendRow"><span class="legendLabel"><span class="swatch" style="color:#ff4747;background:#ff4747"></span>Hunted</span><span>Blinking red danger</span></div>
+      </div>
+
+      <div class="touchControls">
+        <div class="smallText">Touch movement pad for Player 1</div>
+        <div class="touchPad" id="touchPad">
+          <div class="touchKnob" id="touchKnob"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="menuOverlay">
+    <div class="card">
+      <h2>Shadow Chase</h2>
+      <p>Local browser prototype for up to 4 players. One player can use touch, mouse drag, or WASD. Other players can be AI or keyboard controlled. This version is tuned for quick testing and GitHub Pages deployment.</p>
+
+      <div class="grid">
+        <div class="section">
+          <h3>Players and characters</h3>
+          <div class="playerList" id="playerList"></div>
+        </div>
+
+        <div class="section">
+          <h3>Round settings</h3>
+          <div class="controlsList">
+            <div><strong>Core rule</strong><br />If a player enters your light cone and they are not facing toward you, you become the chaser.</div>
+            <div><strong>Chaser bonus</strong><br />Slight speed boost plus a blinking gold ring.</div>
+            <div><strong>Hunted bonus</strong><br />Larger light radius plus red warning pulse.</div>
+            <div><strong>Win condition</strong><br />Catch the hunted player before time runs out.</div>
+            <div><strong>Mobile</strong><br />Player 1 can move with the touch pad or by dragging directly on the arena.</div>
+          </div>
+
+          <div class="sliderRow">
+            <label for="roundDuration">Round length: <span id="roundDurationLabel">90</span> seconds</label>
+            <input id="roundDuration" type="range" min="45" max="180" step="15" value="90" />
+          </div>
+
+          <div class="miniStats">
+            <div class="miniStat"><span>Players</span><strong id="playerCountStat">4</strong></div>
+            <div class="miniStat"><span>AI Players</span><strong id="aiCountStat">2</strong></div>
+          </div>
+
+          <div class="winnerBox" id="winnerBox"></div>
+
+          <div class="footerBtns">
+            <button class="btn" id="startBtn">Start round</button>
+            <button class="ghostBtn" id="resumeBtn" style="display:none;">Resume</button>
+            <button class="ghostBtn" id="randomizeBtn">Randomize</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const menuOverlay = document.getElementById('menuOverlay');
+    const playerList = document.getElementById('playerList');
+    const startBtn = document.getElementById('startBtn');
+    const resumeBtn = document.getElementById('resumeBtn');
+    const randomizeBtn = document.getElementById('randomizeBtn');
+    const phasePill = document.getElementById('phasePill');
+    const statusText = document.getElementById('statusText');
+    const clockPill = document.getElementById('clockPill');
+    const roundDuration = document.getElementById('roundDuration');
+    const roundDurationLabel = document.getElementById('roundDurationLabel');
+    const winnerBox = document.getElementById('winnerBox');
+    const playerCountStat = document.getElementById('playerCountStat');
+    const aiCountStat = document.getElementById('aiCountStat');
+    const touchPad = document.getElementById('touchPad');
+    const touchKnob = document.getElementById('touchKnob');
+
+    const CHARACTER_OPTIONS = [
+      { key: 'dragon', label: 'Dragon', emoji: '🐉', color: '#66d1ff' },
+      { key: 'alien', label: 'Alien', emoji: '👽', color: '#7fff9b' },
+      { key: 'strawberry', label: 'Strawberry', emoji: '🍓', color: '#ff5c74' },
+      { key: 'banana', label: 'Banana', emoji: '🍌', color: '#ffd84d' },
+      { key: 'grape', label: 'Grape', emoji: '🍇', color: '#ca8cff' },
+      { key: 'apple', label: 'Apple', emoji: '🍎', color: '#ff6a5e' },
+      { key: 'ghost', label: 'Ghost', emoji: '👻', color: '#e1e8ff' },
+      { key: 'robot', label: 'Robot', emoji: '🤖', color: '#93a7ff' }
+    ];
+
+    const CONTROL_TYPES = ['human', 'ai'];
+
+    const KEY_MAP = {
+      ArrowUp: { player: 1, axis: 'y', value: -1 },
+      ArrowDown: { player: 1, axis: 'y', value: 1 },
+      ArrowLeft: { player: 1, axis: 'x', value: -1 },
+      ArrowRight: { player: 1, axis: 'x', value: 1 },
+      w: { player: 0, axis: 'y', value: -1 },
+      s: { player: 0, axis: 'y', value: 1 },
+      a: { player: 0, axis: 'x', value: -1 },
+      d: { player: 0, axis: 'x', value: 1 },
+      i: { player: 2, axis: 'y', value: -1 },
+      k: { player: 2, axis: 'y', value: 1 },
+      j: { player: 2, axis: 'x', value: -1 },
+      l: { player: 2, axis: 'x', value: 1 },
+      t: { player: 3, axis: 'y', value: -1 },
+      g: { player: 3, axis: 'y', value: 1 },
+      f: { player: 3, axis: 'x', value: -1 },
+      h: { player: 3, axis: 'x', value: 1 }
+    };
+
+    const settings = {
+      roundSeconds: Number(roundDuration.value),
+      players: [
+        { name: 'Player 1', control: 'human', character: 'dragon' },
+        { name: 'Player 2', control: 'ai', character: 'alien' },
+        { name: 'Player 3', control: 'human', character: 'banana' },
+        { name: 'Player 4', control: 'ai', character: 'ghost' }
+      ]
+    };
+
+    const state = {
+      running: false,
+      paused: false,
+      timeLeft: settings.roundSeconds,
+      players: [],
+      chase: null,
+      roundEnded: false,
+      winnerText: '',
+      arena: { width: 1600, height: 1000 },
+      camera: { x: 0, y: 0 },
+      mouseDragActive: false,
+      pointerTarget: null,
+      touchVector: { x: 0, y: 0 }
+    };
+
+    let lastTime = 0;
+    let dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+    const keyState = {};
+
+    function resizeCanvas() {
+      dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+      canvas.width = Math.floor(window.innerWidth * dpr);
+      canvas.height = Math.floor(window.innerHeight * dpr);
+      canvas.style.width = window.innerWidth + 'px';
+      canvas.style.height = window.innerHeight + 'px';
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    function clamp(value, min, max) {
+      return Math.max(min, Math.min(max, value));
+    }
+
+    function lerp(a, b, t) {
+      return a + (b - a) * t;
+    }
+
+    function dist(ax, ay, bx, by) {
+      return Math.hypot(bx - ax, by - ay);
+    }
+
+    function normalize(x, y) {
+      const len = Math.hypot(x, y) || 1;
+      return { x: x / len, y: y / len };
+    }
+
+    function angleBetween(a, b) {
+      let d = a - b;
+      while (d > Math.PI) d -= Math.PI * 2;
+      while (d < -Math.PI) d += Math.PI * 2;
+      return Math.abs(d);
+    }
+
+    function getCharacter(charKey) {
+      return CHARACTER_OPTIONS.find(c => c.key === charKey) || CHARACTER_OPTIONS[0];
+    }
+
+    function createPlayer(index, config) {
+      const char = getCharacter(config.character);
+      const margin = 140;
+      const x = margin + Math.random() * (state.arena.width - margin * 2);
+      const y = margin + Math.random() * (state.arena.height - margin * 2);
+      return {
+        id: index,
+        name: config.name,
+        control: config.control,
+        character: config.character,
+        emoji: char.emoji,
+        color: char.color,
+        x,
+        y,
+        vx: 0,
+        vy: 0,
+        facing: Math.random() * Math.PI * 2,
+        radius: 22,
+        baseLight: 120,
+        caughtCount: 0,
+        targetX: x,
+        targetY: y,
+        aiRetargetTimer: 0,
+        dangerPulse: 0,
+        chasePulse: 0,
+        speed: 150,
+        status: 'idle'
+      };
+    }
+
+    function rebuildPlayers() {
+      state.players = settings.players.map((p, i) => createPlayer(i, p));
+      state.chase = null;
+      state.timeLeft = settings.roundSeconds;
+      state.roundEnded = false;
+      state.winnerText = '';
+      winnerBox.className = 'winnerBox';
+      winnerBox.innerHTML = '';
+    }
+
+    function renderMenu() {
+      playerList.innerHTML = '';
+      settings.players.forEach((player, index) => {
+        const card = document.createElement('div');
+        card.className = 'playerCard';
+        const currentChar = getCharacter(player.character);
+
+        const characterOptions = CHARACTER_OPTIONS.map(option => {
+          const selected = option.key === player.character ? 'selected' : '';
+          return `<option value="${option.key}" ${selected}>${option.emoji} ${option.label}</option>`;
+        }).join('');
+
+        const controlOptions = CONTROL_TYPES.map(option => {
+          const label = option === 'human' ? 'Human' : 'AI';
+          const selected = option === player.control ? 'selected' : '';
+          return `<option value="${option}" ${selected}>${label}</option>`;
+        }).join('');
+
+        card.innerHTML = `
+          <div class="playerTop">
+            <strong>${player.name}</strong>
+            <span class="pill">${currentChar.emoji} ${currentChar.label}</span>
+          </div>
+          <div class="row">
+            <select data-index="${index}" data-field="character">${characterOptions}</select>
+            <select data-index="${index}" data-field="control">${controlOptions}</select>
+          </div>
+        `;
+        playerList.appendChild(card);
+      });
+
+      playerList.querySelectorAll('select').forEach(select => {
+        select.addEventListener('change', (event) => {
+          const idx = Number(event.target.dataset.index);
+          const field = event.target.dataset.field;
+          settings.players[idx][field] = event.target.value;
+          renderMenu();
+        });
+      });
+
+      const aiCount = settings.players.filter(p => p.control === 'ai').length;
+      playerCountStat.textContent = String(settings.players.length);
+      aiCountStat.textContent = String(aiCount);
+      roundDurationLabel.textContent = String(settings.roundSeconds);
+    }
+
+    roundDuration.addEventListener('input', () => {
+      settings.roundSeconds = Number(roundDuration.value);
+      roundDurationLabel.textContent = String(settings.roundSeconds);
+      if (!state.running) state.timeLeft = settings.roundSeconds;
+      updateHud();
+    });
+
+    randomizeBtn.addEventListener('click', () => {
+      settings.players.forEach(player => {
+        const char = CHARACTER_OPTIONS[Math.floor(Math.random() * CHARACTER_OPTIONS.length)];
+        player.character = char.key;
+        if (Math.random() < 0.35) {
+          player.control = 'ai';
+        }
+      });
+      settings.players[0].control = 'human';
+      renderMenu();
+    });
+
+    function startRound() {
+      rebuildPlayers();
+      state.running = true;
+      state.paused = false;
+      menuOverlay.style.display = 'none';
+      resumeBtn.style.display = 'none';
+      updateHud();
+    }
+
+    function pauseRound(showMenu = true) {
+      if (!state.running || state.roundEnded) return;
+      state.paused = true;
+      if (showMenu) {
+        menuOverlay.style.display = 'flex';
+        resumeBtn.style.display = 'inline-flex';
+      }
+      updateHud();
+    }
+
+    function resumeRound() {
+      if (!state.running || state.roundEnded) return;
+      state.paused = false;
+      menuOverlay.style.display = 'none';
+      updateHud();
+    }
+
+    startBtn.addEventListener('click', startRound);
+    resumeBtn.addEventListener('click', resumeRound);
+
+    function chooseNearestThreat(observer) {
+      let nearest = null;
+      let nearestDistance = Infinity;
+      for (const other of state.players) {
+        if (other.id === observer.id) continue;
+        const d = dist(observer.x, observer.y, other.x, other.y);
+        if (d < nearestDistance) {
+          nearestDistance = d;
+          nearest = other;
+        }
+      }
+      return nearest;
+    }
+
+    function updateAi(player, dt) {
+      const threat = state.chase && state.chase.targetId === player.id
+        ? state.players.find(p => p.id === state.chase.chaserId)
+        : null;
+
+      player.aiRetargetTimer -= dt;
+      if (player.aiRetargetTimer <= 0) {
+        player.aiRetargetTimer = 0.6 + Math.random() * 1.4;
+        if (threat) {
+          const away = normalize(player.x - threat.x, player.y - threat.y);
+          player.targetX = clamp(player.x + away.x * (180 + Math.random() * 120), 70, state.arena.width - 70);
+          player.targetY = clamp(player.y + away.y * (180 + Math.random() * 120), 70, state.arena.height - 70);
+        } else {
+          const nearby = chooseNearestThreat(player);
+          if (nearby && Math.random() < 0.65) {
+            const orbitAngle = Math.atan2(nearby.y - player.y, nearby.x - player.x) + (Math.random() * 1.8 - 0.9);
+            player.targetX = clamp(player.x + Math.cos(orbitAngle) * (140 + Math.random() * 90), 70, state.arena.width - 70);
+            player.targetY = clamp(player.y + Math.sin(orbitAngle) * (140 + Math.random() * 90), 70, state.arena.height - 70);
+          } else {
+            player.targetX = 70 + Math.random() * (state.arena.width - 140);
+            player.targetY = 70 + Math.random() * (state.arena.height - 140);
+          }
+        }
+      }
+
+      const dir = normalize(player.targetX - player.x, player.targetY - player.y);
+      player.vx = dir.x;
+      player.vy = dir.y;
+    }
+
+    function getHumanVector(playerIndex) {
+      let x = 0;
+      let y = 0;
+      for (const key in KEY_MAP) {
+        const binding = KEY_MAP[key];
+        if (binding.player !== playerIndex) continue;
+        if (keyState[key]) {
+          if (binding.axis === 'x') x += binding.value;
+          if (binding.axis === 'y') y += binding.value;
+        }
+      }
+      if (playerIndex === 0) {
+        x += state.touchVector.x;
+        y += state.touchVector.y;
+      }
+      if (x === 0 && y === 0) return { x: 0, y: 0 };
+      return normalize(x, y);
+    }
+
+    function updatePlayers(dt) {
+      for (const player of state.players) {
+        if (player.control === 'ai') {
+          updateAi(player, dt);
+        } else {
+          const vec = getHumanVector(player.id);
+          player.vx = vec.x;
+          player.vy = vec.y;
+        }
+
+        let speed = player.speed;
+        let lightRadius = player.baseLight;
+        player.status = 'idle';
+
+        if (state.chase) {
+          if (state.chase.chaserId === player.id) {
+            speed *= 1.14;
+            player.chasePulse += dt * 5.5;
+            player.status = 'chaser';
+          }
+          if (state.chase.targetId === player.id) {
+            lightRadius *= 1.45;
+            player.dangerPulse += dt * 7.2;
+            player.status = 'hunted';
+          }
+        }
+
+        player.lightRadius = lightRadius;
+
+        const nextX = player.x + player.vx * speed * dt;
+        const nextY = player.y + player.vy * speed * dt;
+        player.x = clamp(nextX, 30, state.arena.width - 30);
+        player.y = clamp(nextY, 30, state.arena.height - 30);
+
+        if (Math.abs(player.vx) > 0.01 || Math.abs(player.vy) > 0.01) {
+          const targetFacing = Math.atan2(player.vy, player.vx);
+          const diff = targetFacing - player.facing;
+          player.facing = lerp(player.facing, player.facing + Math.atan2(Math.sin(diff), Math.cos(diff)), Math.min(1, dt * 8));
+        }
+      }
+    }
+
+    function canTriggerChase(observer, target) {
+      const d = dist(observer.x, observer.y, target.x, target.y);
+      if (d > observer.lightRadius) return false;
+
+      const directionToTarget = Math.atan2(target.y - observer.y, target.x - observer.x);
+      const observerViewDelta = angleBetween(observer.facing, directionToTarget);
+      if (observerViewDelta > Math.PI / 3.3) return false;
+
+      const directionTargetToObserver = Math.atan2(observer.y - target.y, observer.x - target.x);
+      const targetFacingDelta = angleBetween(target.facing, directionTargetToObserver);
+      const facingObserver = targetFacingDelta < Math.PI / 2.7;
+
+      return !facingObserver;
+    }
+
+    function updateChaseLogic(dt) {
+      if (!state.chase) {
+        for (const observer of state.players) {
+          for (const target of state.players) {
+            if (observer.id === target.id) continue;
+            if (canTriggerChase(observer, target)) {
+              state.chase = {
+                chaserId: observer.id,
+                targetId: target.id,
+                elapsed: 0
+              };
+              updateHud();
+              return;
+            }
+          }
+        }
+      } else {
+        state.chase.elapsed += dt;
+        const chaser = state.players.find(p => p.id === state.chase.chaserId);
+        const target = state.players.find(p => p.id === state.chase.targetId);
+        if (!chaser || !target) {
+          state.chase = null;
+          return;
+        }
+
+        if (dist(chaser.x, chaser.y, target.x, target.y) < chaser.radius + target.radius + 8) {
+          chaser.caughtCount += 1;
+          endRound(`${chaser.name} caught ${target.name}`);
+        }
+      }
+    }
+
+    function endRound(message) {
+      state.running = false;
+      state.roundEnded = true;
+      state.winnerText = message;
+      winnerBox.className = 'winnerBox show';
+      winnerBox.innerHTML = `<strong>${message}</strong><div class="smallText" style="margin-top:8px;">Tap Start round to play again. You can change characters or switch players between AI and human.</div>`;
+      menuOverlay.style.display = 'flex';
+      resumeBtn.style.display = 'none';
+      updateHud();
+    }
+
+    function updateHud() {
+      const seconds = Math.max(0, Math.ceil(state.timeLeft));
+      clockPill.textContent = seconds + 's';
+
+      if (!state.running && !state.roundEnded) {
+        phasePill.textContent = 'Setup';
+        phasePill.style.color = 'var(--accent)';
+        statusText.textContent = 'Pick characters and start a round.';
+        return;
+      }
+
+      if (state.paused) {
+        phasePill.textContent = 'Paused';
+        phasePill.style.color = 'var(--warn)';
+        statusText.textContent = 'Round paused.';
+        return;
+      }
+
+      if (state.roundEnded) {
+        phasePill.textContent = 'Finished';
+        phasePill.style.color = 'var(--success)';
+        statusText.textContent = state.winnerText || 'Round over.';
+        return;
+      }
+
+      if (state.chase) {
+        const chaser = state.players.find(p => p.id === state.chase.chaserId);
+        const target = state.players.find(p => p.id === state.chase.targetId);
+        phasePill.textContent = 'Chase';
+        phasePill.style.color = 'var(--warn)';
+        statusText.textContent = `${chaser?.name || 'A player'} is chasing ${target?.name || 'a target'}.`;
+      } else {
+        phasePill.textContent = 'Hidden';
+        phasePill.style.color = 'var(--accent)';
+        statusText.textContent = 'Move quietly and look for players facing away from you.';
+      }
+    }
+
+    function drawBackground() {
+      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+
+      const camX = state.camera.x;
+      const camY = state.camera.y;
+
+      const gradient = ctx.createLinearGradient(0, 0, 0, window.innerHeight);
+      gradient.addColorStop(0, '#07111f');
+      gradient.addColorStop(1, '#020307');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
+
+      const gridSize = 120;
+      ctx.save();
+      ctx.translate(-camX, -camY);
+      ctx.strokeStyle = 'rgba(255,255,255,0.035)';
+      ctx.lineWidth = 1;
+      for (let x = 0; x <= state.arena.width; x += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, state.arena.height);
+        ctx.stroke();
+      }
+      for (let y = 0; y <= state.arena.height; y += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(state.arena.width, y);
+        ctx.stroke();
+      }
+
+      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+      ctx.lineWidth = 4;
+      ctx.strokeRect(0, 0, state.arena.width, state.arena.height);
+      ctx.restore();
+    }
+
+    function drawLighting() {
+      ctx.save();
+      ctx.fillStyle = 'rgba(0,0,0,0.89)';
+      ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
+      ctx.globalCompositeOperation = 'destination-out';
+
+      for (const player of state.players) {
+        const sx = player.x - state.camera.x;
+        const sy = player.y - state.camera.y;
+        const pulseBoost = player.status === 'hunted' ? Math.sin(player.dangerPulse) * 12 : 0;
+        const radius = player.lightRadius + pulseBoost;
+
+        const grad = ctx.createRadialGradient(sx, sy, 12, sx, sy, radius);
+        grad.addColorStop(0, 'rgba(255,255,255,0.92)');
+        grad.addColorStop(0.28, 'rgba(255,255,255,0.45)');
+        grad.addColorStop(0.68, 'rgba(255,255,255,0.13)');
+        grad.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(sx, sy, radius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.restore();
+    }
+
+    function drawPlayers() {
+      ctx.save();
+      ctx.translate(-state.camera.x, -state.camera.y);
+
+      for (const player of state.players) {
+        const blinkAlpha = 0.5 + 0.5 * Math.sin((player.status === 'chaser' ? player.chasePulse : player.dangerPulse) * 1.2);
+
+        if (player.status === 'chaser') {
+          ctx.beginPath();
+          ctx.arc(player.x, player.y, player.radius + 15 + blinkAlpha * 6, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(255,159,28,${0.42 + blinkAlpha * 0.4})`;
+          ctx.lineWidth = 5;
+          ctx.stroke();
+        }
+
+        if (player.status === 'hunted') {
+          ctx.beginPath();
+          ctx.arc(player.x, player.y, player.radius + 17 + blinkAlpha * 7, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(255,71,71,${0.35 + blinkAlpha * 0.5})`;
+          ctx.lineWidth = 6;
+          ctx.stroke();
+        }
+
+        ctx.beginPath();
+        ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+        ctx.fillStyle = player.color;
+        ctx.shadowColor = player.color;
+        ctx.shadowBlur = 18;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        ctx.beginPath();
+        ctx.moveTo(player.x, player.y);
+        ctx.lineTo(player.x + Math.cos(player.facing) * 32, player.y + Math.sin(player.facing) * 32);
+        ctx.strokeStyle = 'rgba(255,255,255,0.75)';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+
+        ctx.font = '28px system-ui';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(player.emoji, player.x, player.y + 1);
+
+        ctx.font = '12px Inter, system-ui, sans-serif';
+        ctx.fillStyle = 'rgba(255,255,255,0.9)';
+        ctx.fillText(player.name, player.x, player.y - 40);
+      }
+
+      ctx.restore();
+    }
+
+    function drawMiniRadar() {
+      const width = 164;
+      const height = 112;
+      const x = 12;
+      const y = window.innerHeight - height - 12;
+      ctx.save();
+      ctx.fillStyle = 'rgba(8, 12, 22, 0.8)';
+      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.roundRect(x, y, width, height, 16);
+      ctx.fill();
+      ctx.stroke();
+
+      const pad = 10;
+      ctx.fillStyle = 'rgba(255,255,255,0.05)';
+      ctx.fillRect(x + pad, y + pad, width - pad * 2, height - pad * 2);
+
+      for (const player of state.players) {
+        const px = x + pad + (player.x / state.arena.width) * (width - pad * 2);
+        const py = y + pad + (player.y / state.arena.height) * (height - pad * 2);
+        ctx.beginPath();
+        ctx.arc(px, py, 5, 0, Math.PI * 2);
+        ctx.fillStyle = player.status === 'hunted' ? '#ff4747' : player.status === 'chaser' ? '#ff9f1c' : player.color;
+        ctx.fill();
+      }
+
+      ctx.fillStyle = 'rgba(255,255,255,0.8)';
+      ctx.font = '12px Inter, system-ui, sans-serif';
+      ctx.fillText('Arena map', x + 14, y + 18);
+      ctx.restore();
+    }
+
+    function updateCamera(dt) {
+      const focus = state.players[0] || { x: state.arena.width / 2, y: state.arena.height / 2 };
+      const targetX = clamp(focus.x - window.innerWidth / 2, 0, Math.max(0, state.arena.width - window.innerWidth));
+      const targetY = clamp(focus.y - window.innerHeight / 2, 0, Math.max(0, state.arena.height - window.innerHeight));
+      state.camera.x = lerp(state.camera.x, targetX, Math.min(1, dt * 4));
+      state.camera.y = lerp(state.camera.y, targetY, Math.min(1, dt * 4));
+    }
+
+    function gameLoop(timestamp) {
+      const rawDt = (timestamp - lastTime) / 1000 || 0;
+      const dt = Math.min(0.033, rawDt);
+      lastTime = timestamp;
+
+      if (state.running && !state.paused && !state.roundEnded) {
+        state.timeLeft -= dt;
+        if (state.timeLeft <= 0) {
+          endRound('Time expired. Nobody made the final catch.');
+        } else {
+          updatePlayers(dt);
+          updateChaseLogic(dt);
+          updateCamera(dt);
+          updateHud();
+        }
+      }
+
+      drawBackground();
+      drawPlayers();
+      drawLighting();
+      drawMiniRadar();
+
+      requestAnimationFrame(gameLoop);
+    }
+
+    document.addEventListener('keydown', (event) => {
+      const key = event.key.length === 1 ? event.key.toLowerCase() : event.key;
+      keyState[key] = true;
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(event.key)) {
+        event.preventDefault();
+      }
+      if (event.key.toLowerCase() === 'p') {
+        if (state.running && !state.paused) pauseRound(true);
+        else if (state.running && state.paused) resumeRound();
+      }
+      if (event.key === 'Escape') {
+        pauseRound(true);
+      }
+    });
+
+    document.addEventListener('keyup', (event) => {
+      const key = event.key.length === 1 ? event.key.toLowerCase() : event.key;
+      keyState[key] = false;
+    });
+
+    function setTouchVectorFromPoint(clientX, clientY) {
+      const rect = touchPad.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const dx = clientX - cx;
+      const dy = clientY - cy;
+      const max = rect.width * 0.34;
+      const n = normalize(dx, dy);
+      const len = Math.min(max, Math.hypot(dx, dy));
+      const knobX = n.x * len;
+      const knobY = n.y * len;
+      touchKnob.style.left = `calc(50% + ${knobX}px)`;
+      touchKnob.style.top = `calc(50% + ${knobY}px)`;
+      state.touchVector.x = len < 10 ? 0 : n.x;
+      state.touchVector.y = len < 10 ? 0 : n.y;
+    }
+
+    function resetTouchKnob() {
+      touchKnob.style.left = '50%';
+      touchKnob.style.top = '50%';
+      state.touchVector.x = 0;
+      state.touchVector.y = 0;
+    }
+
+    touchPad.addEventListener('pointerdown', (event) => {
+      touchPad.setPointerCapture(event.pointerId);
+      setTouchVectorFromPoint(event.clientX, event.clientY);
+    });
+
+    touchPad.addEventListener('pointermove', (event) => {
+      if (event.buttons === 0 && event.pointerType !== 'touch') return;
+      setTouchVectorFromPoint(event.clientX, event.clientY);
+    });
+
+    touchPad.addEventListener('pointerup', resetTouchKnob);
+    touchPad.addEventListener('pointercancel', resetTouchKnob);
+
+    function arenaPointFromEvent(event) {
+      const rect = canvas.getBoundingClientRect();
+      const x = event.clientX - rect.left + state.camera.x;
+      const y = event.clientY - rect.top + state.camera.y;
+      return { x, y };
+    }
+
+    canvas.addEventListener('pointerdown', (event) => {
+      if (!state.running || state.paused) return;
+      state.mouseDragActive = true;
+      const point = arenaPointFromEvent(event);
+      state.pointerTarget = point;
+      const p = state.players[0];
+      if (p && p.control === 'human') {
+        const vec = normalize(point.x - p.x, point.y - p.y);
+        state.touchVector.x = vec.x;
+        state.touchVector.y = vec.y;
+      }
+    });
+
+    canvas.addEventListener('pointermove', (event) => {
+      if (!state.mouseDragActive || !state.running || state.paused) return;
+      const point = arenaPointFromEvent(event);
+      state.pointerTarget = point;
+      const p = state.players[0];
+      if (p && p.control === 'human') {
+        const dx = point.x - p.x;
+        const dy = point.y - p.y;
+        const len = Math.hypot(dx, dy);
+        if (len < 20) {
+          state.touchVector.x = 0;
+          state.touchVector.y = 0;
+        } else {
+          const vec = normalize(dx, dy);
+          state.touchVector.x = vec.x;
+          state.touchVector.y = vec.y;
+        }
+      }
+    });
+
+    function endCanvasPointer() {
+      state.mouseDragActive = false;
+      state.pointerTarget = null;
+      if (!matchMedia('(hover: none) and (pointer: coarse)').matches) {
+        state.touchVector.x = 0;
+        state.touchVector.y = 0;
+      }
+    }
+
+    canvas.addEventListener('pointerup', endCanvasPointer);
+    canvas.addEventListener('pointercancel', endCanvasPointer);
+
+    renderMenu();
+    rebuildPlayers();
+    updateHud();
+    requestAnimationFrame((t) => {
+      lastTime = t;
+      gameLoop(t);
+    });
+  </script>
+</body>
+</html>
