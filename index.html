@@ -2,27 +2,28 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
   <title>Shadow Chase</title>
   <style>
     :root {
-      --bg: #05070d;
-      --panel: rgba(12, 16, 28, 0.92);
+      --bg: #04060b;
+      --panel: rgba(10, 13, 22, 0.92);
       --panel-border: rgba(255, 255, 255, 0.08);
-      --text: #f4f7fb;
-      --muted: #a7b0c4;
+      --text: #eef4ff;
+      --muted: #9da8bd;
       --accent: #66d1ff;
       --danger: #ff4747;
-      --success: #4cff8f;
-      --warn: #ff9f1c;
-      --shadow: rgba(0, 0, 0, 0.35);
+      --warn: #ffad1f;
+      --success: #54ff92;
+      --maze: rgba(130, 160, 190, 0.18);
+      --maze-edge: rgba(180, 210, 245, 0.26);
     }
 
     * {
       box-sizing: border-box;
       -webkit-tap-highlight-color: transparent;
-      user-select: none;
       touch-action: none;
+      user-select: none;
     }
 
     html,
@@ -31,13 +32,9 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background: radial-gradient(circle at top, #0d1630 0%, #05070d 55%, #020307 100%);
+      background: radial-gradient(circle at top, #0b1427 0%, #05070d 45%, #020307 100%);
       color: var(--text);
       font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }
-
-    body {
-      position: relative;
     }
 
     #gameCanvas {
@@ -46,6 +43,7 @@
       width: 100vw;
       height: 100vh;
       display: block;
+      touch-action: none;
     }
 
     .hud {
@@ -56,48 +54,47 @@
 
     .topBar {
       position: absolute;
-      top: max(12px, env(safe-area-inset-top));
-      left: 12px;
-      right: 12px;
+      top: max(10px, env(safe-area-inset-top));
+      left: 10px;
+      right: 10px;
       display: flex;
       gap: 10px;
-      align-items: flex-start;
       justify-content: space-between;
-      pointer-events: none;
+      align-items: flex-start;
     }
 
     .panel {
+      pointer-events: auto;
       background: var(--panel);
       border: 1px solid var(--panel-border);
-      box-shadow: 0 12px 36px var(--shadow);
-      backdrop-filter: blur(14px);
+      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.34);
+      backdrop-filter: blur(12px);
       border-radius: 18px;
       padding: 12px 14px;
-      pointer-events: auto;
     }
 
     .titleBox {
-      max-width: min(420px, 58vw);
+      max-width: min(520px, 58vw);
     }
 
     .titleBox h1 {
-      margin: 0 0 4px 0;
-      font-size: clamp(20px, 2.6vw, 26px);
+      margin: 0 0 5px 0;
+      font-size: clamp(19px, 2.8vw, 28px);
       line-height: 1.05;
-      letter-spacing: 0.02em;
     }
 
     .titleBox p,
     .statusText,
-    .smallText {
+    .smallText,
+    .desc {
       margin: 0;
       color: var(--muted);
-      line-height: 1.35;
+      line-height: 1.4;
       font-size: clamp(12px, 1.7vw, 14px);
     }
 
     .statusBox {
-      min-width: min(340px, 40vw);
+      min-width: min(360px, 42vw);
     }
 
     .statusHeading {
@@ -115,9 +112,9 @@
       padding: 7px 12px;
       border-radius: 999px;
       font-size: 13px;
-      font-weight: 700;
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      font-weight: 800;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.08);
     }
 
     .pill.dot::before {
@@ -132,24 +129,24 @@
     .overlay {
       position: fixed;
       inset: 0;
+      z-index: 20;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 24px;
-      background: rgba(0, 0, 0, 0.46);
+      padding: 18px;
+      background: rgba(0, 0, 0, 0.5);
       backdrop-filter: blur(10px);
-      z-index: 10;
     }
 
     .card {
-      width: min(980px, 100%);
-      max-height: min(94vh, 1100px);
+      width: min(1040px, 100%);
+      max-height: 95vh;
       overflow: auto;
       border-radius: 24px;
-      background: rgba(8, 12, 22, 0.96);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      box-shadow: 0 28px 80px rgba(0, 0, 0, 0.55);
-      padding: 22px;
+      background: rgba(8, 12, 22, 0.97);
+      border: 1px solid rgba(255,255,255,0.1);
+      box-shadow: 0 28px 80px rgba(0,0,0,0.52);
+      padding: 20px;
     }
 
     .card h2 {
@@ -159,21 +156,21 @@
     }
 
     .card > p {
-      margin: 0 0 18px 0;
+      margin: 0 0 16px 0;
       color: var(--muted);
-      font-size: 15px;
       line-height: 1.45;
+      font-size: 15px;
     }
 
     .grid {
       display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
       gap: 16px;
-      grid-template-columns: 1.15fr 0.85fr;
     }
 
     .section {
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.06);
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
       border-radius: 18px;
       padding: 16px;
     }
@@ -193,20 +190,16 @@
       gap: 10px;
       padding: 12px;
       border-radius: 16px;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.06);
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.06);
     }
 
     .playerTop {
       display: flex;
-      align-items: center;
       justify-content: space-between;
+      align-items: center;
       gap: 10px;
       flex-wrap: wrap;
-    }
-
-    .playerTop strong {
-      font-size: 15px;
     }
 
     .row {
@@ -224,28 +217,25 @@
       outline: none;
     }
 
-    select,
+    select {
+      min-height: 44px;
+      min-width: 140px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.08);
+      color: var(--text);
+      padding: 10px 12px;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
     .btn,
     .ghostBtn {
       min-height: 44px;
       border-radius: 14px;
-    }
-
-    select {
-      background: rgba(255, 255, 255, 0.08);
-      color: var(--text);
-      padding: 10px 12px;
-      min-width: 140px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-    }
-
-    .btn,
-    .ghostBtn {
-      cursor: pointer;
       padding: 12px 16px;
+      cursor: pointer;
       font-weight: 800;
       letter-spacing: 0.02em;
-      transition: transform 0.15s ease, opacity 0.15s ease, background 0.15s ease;
+      transition: transform 0.15s ease, opacity 0.15s ease;
     }
 
     .btn:active,
@@ -254,14 +244,14 @@
     }
 
     .btn {
-      color: #04111a;
-      background: linear-gradient(135deg, #79f7ff 0%, #77ffaa 100%);
+      color: #06121d;
+      background: linear-gradient(135deg, #7bf4ff 0%, #7dffb0 100%);
     }
 
     .ghostBtn {
       color: var(--text);
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.08);
     }
 
     .controlsList {
@@ -272,8 +262,8 @@
     .controlsList div {
       padding: 11px 12px;
       border-radius: 14px;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.05);
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.05);
       line-height: 1.45;
       color: var(--muted);
       font-size: 14px;
@@ -281,83 +271,6 @@
 
     .controlsList strong {
       color: var(--text);
-    }
-
-    .bottomRight {
-      position: absolute;
-      right: 12px;
-      bottom: max(12px, env(safe-area-inset-bottom));
-      width: min(330px, calc(100vw - 24px));
-      pointer-events: auto;
-      display: grid;
-      gap: 10px;
-    }
-
-    .legend,
-    .touchControls {
-      background: var(--panel);
-      border: 1px solid var(--panel-border);
-      border-radius: 18px;
-      padding: 12px;
-      box-shadow: 0 12px 36px var(--shadow);
-      backdrop-filter: blur(14px);
-    }
-
-    .legendRow {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      align-items: center;
-      padding: 7px 0;
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    .legendRow + .legendRow {
-      border-top: 1px solid rgba(255, 255, 255, 0.06);
-    }
-
-    .swatch {
-      width: 14px;
-      height: 14px;
-      border-radius: 50%;
-      margin-right: 8px;
-      box-shadow: 0 0 10px currentColor;
-      flex: 0 0 auto;
-    }
-
-    .legendLabel {
-      display: inline-flex;
-      align-items: center;
-    }
-
-    .touchControls {
-      display: none;
-    }
-
-    .touchPad {
-      position: relative;
-      width: min(220px, 52vw);
-      aspect-ratio: 1;
-      margin: 4px auto 0 auto;
-      border-radius: 50%;
-      background: radial-gradient(circle at center, rgba(255,255,255,0.09) 0%, rgba(255,255,255,0.03) 55%, rgba(255,255,255,0.02) 100%);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      touch-action: none;
-      overflow: hidden;
-    }
-
-    .touchKnob {
-      position: absolute;
-      width: 68px;
-      height: 68px;
-      border-radius: 50%;
-      background: radial-gradient(circle at 35% 35%, rgba(255,255,255,0.5), rgba(102,209,255,0.55));
-      border: 1px solid rgba(255,255,255,0.2);
-      box-shadow: 0 14px 24px rgba(0,0,0,0.35);
-      left: 50%;
-      top: 50%;
-      transform: translate(-50%, -50%);
     }
 
     .sliderRow {
@@ -376,19 +289,6 @@
       gap: 10px;
       flex-wrap: wrap;
       margin-top: 18px;
-    }
-
-    .winnerBox {
-      margin-top: 16px;
-      padding: 14px;
-      border-radius: 16px;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.08);
-      display: none;
-    }
-
-    .winnerBox.show {
-      display: block;
     }
 
     .miniStats {
@@ -417,6 +317,96 @@
       line-height: 1;
     }
 
+    .winnerBox {
+      margin-top: 16px;
+      padding: 14px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      display: none;
+    }
+
+    .winnerBox.show {
+      display: block;
+    }
+
+    .bottomRight {
+      position: absolute;
+      right: 10px;
+      bottom: max(10px, env(safe-area-inset-bottom));
+      width: min(340px, calc(100vw - 20px));
+      display: grid;
+      gap: 10px;
+      pointer-events: auto;
+    }
+
+    .legend,
+    .touchControls {
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: 18px;
+      padding: 12px;
+      box-shadow: 0 12px 36px rgba(0,0,0,0.34);
+      backdrop-filter: blur(14px);
+    }
+
+    .legendRow {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      padding: 7px 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .legendRow + .legendRow {
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .swatch {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      margin-right: 8px;
+      box-shadow: 0 0 10px currentColor;
+      flex: 0 0 auto;
+    }
+
+    .legendLabel {
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .touchControls {
+      display: block;
+    }
+
+    .touchPad {
+      position: relative;
+      width: min(210px, 48vw);
+      aspect-ratio: 1;
+      margin: 8px auto 0 auto;
+      border-radius: 50%;
+      background: radial-gradient(circle at center, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.03) 60%, rgba(255,255,255,0.02) 100%);
+      border: 1px solid rgba(255,255,255,0.08);
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    .touchKnob {
+      position: absolute;
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, rgba(255,255,255,0.6), rgba(102,209,255,0.55));
+      border: 1px solid rgba(255,255,255,0.2);
+      box-shadow: 0 14px 24px rgba(0,0,0,0.35);
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+    }
+
     @media (max-width: 900px) {
       .grid {
         grid-template-columns: 1fr;
@@ -431,34 +421,28 @@
         max-width: 100%;
         width: 100%;
       }
-
-      .bottomRight {
-        width: min(340px, calc(100vw - 24px));
-      }
-    }
-
-    @media (hover: none) and (pointer: coarse) {
-      .touchControls {
-        display: block;
-      }
     }
 
     @media (max-width: 640px) {
-      .card {
-        padding: 16px;
-      }
-
       .panel {
         padding: 10px 12px;
         border-radius: 16px;
       }
 
-      .bottomRight {
-        gap: 8px;
+      .card {
+        padding: 16px;
       }
 
       .legend {
         display: none;
+      }
+
+      .bottomRight {
+        width: min(270px, calc(100vw - 20px));
+      }
+
+      .touchPad {
+        width: min(180px, 42vw);
       }
     }
   </style>
@@ -470,22 +454,23 @@
     <div class="topBar">
       <div class="panel titleBox">
         <h1>Shadow Chase</h1>
-        <p>Stay hidden in the dark. Catch players who are not facing you. Once spotted, the hunted player gets more light. The chaser gets more speed.</p>
+        <p>Dark maze survival. You only see what falls inside the light. Spot a player who is not facing you to trigger the hunt. Survive long enough and the hunter can turn into a boss.</p>
       </div>
       <div class="panel statusBox">
         <div class="statusHeading">
           <div id="phasePill" class="pill dot" style="color: var(--accent);">Setup</div>
-          <div id="clockPill" class="pill">90s</div>
+          <div id="clockPill" class="pill">180s</div>
         </div>
-        <p id="statusText" class="statusText">Pick characters and start a round.</p>
+        <p id="statusText" class="statusText">Use GitHub Pages for this version. True live online multiplayer needs a backend.</p>
       </div>
     </div>
 
     <div class="bottomRight">
       <div class="legend">
-        <div class="legendRow"><span class="legendLabel"><span class="swatch" style="color:#66d1ff;background:#66d1ff"></span>Calm</span><span>Free roaming</span></div>
-        <div class="legendRow"><span class="legendLabel"><span class="swatch" style="color:#ff9f1c;background:#ff9f1c"></span>Chaser</span><span>Blinking gold ring</span></div>
-        <div class="legendRow"><span class="legendLabel"><span class="swatch" style="color:#ff4747;background:#ff4747"></span>Hunted</span><span>Blinking red danger</span></div>
+        <div class="legendRow"><span class="legendLabel"><span class="swatch" style="color:#66d1ff;background:#66d1ff"></span>Explorer</span><span>Roaming quietly</span></div>
+        <div class="legendRow"><span class="legendLabel"><span class="swatch" style="color:#ffad1f;background:#ffad1f"></span>Hunter</span><span>Faster with pulse</span></div>
+        <div class="legendRow"><span class="legendLabel"><span class="swatch" style="color:#ff4747;background:#ff4747"></span>Hunted</span><span>Bigger light radius</span></div>
+        <div class="legendRow"><span class="legendLabel"><span class="swatch" style="color:#ff2f2f;background:#ff2f2f"></span>Boss</span><span>Too large for holes</span></div>
       </div>
 
       <div class="touchControls">
@@ -500,7 +485,7 @@
   <div class="overlay" id="menuOverlay">
     <div class="card">
       <h2>Shadow Chase</h2>
-      <p>Local browser prototype for up to 4 players. One player can use touch, mouse drag, or WASD. Other players can be AI or keyboard controlled. This version is tuned for quick testing and GitHub Pages deployment.</p>
+      <p>This version is the right choice for GitHub Pages because it is plain HTML, CSS, and JavaScript. Keep using that for now. Real time multiplayer with separate people joining the site at the same moment is possible, but it needs a backend service and cannot run as a GitHub Pages only site. So this build focuses on stronger AI play, mobile controls that actually work, maze hiding spots, escape doors, and a boss phase.</p>
 
       <div class="grid">
         <div class="section">
@@ -511,21 +496,21 @@
         <div class="section">
           <h3>Round settings</h3>
           <div class="controlsList">
-            <div><strong>Core rule</strong><br />If a player enters your light cone and they are not facing toward you, you become the chaser.</div>
-            <div><strong>Chaser bonus</strong><br />Slight speed boost plus a blinking gold ring.</div>
-            <div><strong>Hunted bonus</strong><br />Larger light radius plus red warning pulse.</div>
-            <div><strong>Win condition</strong><br />Catch the hunted player before time runs out.</div>
-            <div><strong>Mobile</strong><br />Player 1 can move with the touch pad or by dragging directly on the arena.</div>
+            <div><strong>Maze visibility</strong><br />The maze is visible, but dim. Other players are only visible when they are inside visible light.</div>
+            <div><strong>Hunter trigger</strong><br />See someone who is not facing you and the hunt begins.</div>
+            <div><strong>Boss phase</strong><br />At 4 minutes the current hunter becomes a giant red boss if a hunt is active.</div>
+            <div><strong>Holes in walls</strong><br />Regular players can slip through small openings. The boss cannot fit.</div>
+            <div><strong>Escape doors</strong><br />Corner doors unlock after the timer threshold. Reach one to escape.</div>
           </div>
 
           <div class="sliderRow">
-            <label for="roundDuration">Round length: <span id="roundDurationLabel">90</span> seconds</label>
-            <input id="roundDuration" type="range" min="45" max="180" step="15" value="90" />
+            <label for="roundDuration">Round length: <span id="roundDurationLabel">360</span> seconds</label>
+            <input id="roundDuration" type="range" min="120" max="420" step="30" value="360" />
           </div>
 
           <div class="miniStats">
             <div class="miniStat"><span>Players</span><strong id="playerCountStat">4</strong></div>
-            <div class="miniStat"><span>AI Players</span><strong id="aiCountStat">2</strong></div>
+            <div class="miniStat"><span>AI Players</span><strong id="aiCountStat">3</strong></div>
           </div>
 
           <div class="winnerBox" id="winnerBox"></div>
@@ -574,14 +559,14 @@
     const CONTROL_TYPES = ['human', 'ai'];
 
     const KEY_MAP = {
-      ArrowUp: { player: 1, axis: 'y', value: -1 },
-      ArrowDown: { player: 1, axis: 'y', value: 1 },
-      ArrowLeft: { player: 1, axis: 'x', value: -1 },
-      ArrowRight: { player: 1, axis: 'x', value: 1 },
       w: { player: 0, axis: 'y', value: -1 },
       s: { player: 0, axis: 'y', value: 1 },
       a: { player: 0, axis: 'x', value: -1 },
       d: { player: 0, axis: 'x', value: 1 },
+      ArrowUp: { player: 1, axis: 'y', value: -1 },
+      ArrowDown: { player: 1, axis: 'y', value: 1 },
+      ArrowLeft: { player: 1, axis: 'x', value: -1 },
+      ArrowRight: { player: 1, axis: 'x', value: 1 },
       i: { player: 2, axis: 'y', value: -1 },
       k: { player: 2, axis: 'y', value: 1 },
       j: { player: 2, axis: 'x', value: -1 },
@@ -597,7 +582,7 @@
       players: [
         { name: 'Player 1', control: 'human', character: 'dragon' },
         { name: 'Player 2', control: 'ai', character: 'alien' },
-        { name: 'Player 3', control: 'human', character: 'banana' },
+        { name: 'Player 3', control: 'ai', character: 'banana' },
         { name: 'Player 4', control: 'ai', character: 'ghost' }
       ]
     };
@@ -606,32 +591,24 @@
       running: false,
       paused: false,
       timeLeft: settings.roundSeconds,
-      players: [],
-      chase: null,
       roundEnded: false,
       winnerText: '',
-      arena: { width: 1600, height: 1000 },
+      players: [],
+      chase: null,
+      boss: null,
+      doorsOpen: false,
+      arena: { width: 2400, height: 1600 },
       camera: { x: 0, y: 0 },
-      mouseDragActive: false,
-      pointerTarget: null,
-      touchVector: { x: 0, y: 0 }
+      touchVector: { x: 0, y: 0 },
+      visiblePlayers: new Set(),
+      mazeWalls: [],
+      holes: [],
+      doors: []
     };
 
-    let lastTime = 0;
-    let dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
     const keyState = {};
-
-    function resizeCanvas() {
-      dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
-      canvas.width = Math.floor(window.innerWidth * dpr);
-      canvas.height = Math.floor(window.innerHeight * dpr);
-      canvas.style.width = window.innerWidth + 'px';
-      canvas.style.height = window.innerHeight + 'px';
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    }
-
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
+    let lastTime = 0;
+    let dpr = 1;
 
     function clamp(value, min, max) {
       return Math.max(min, Math.min(max, value));
@@ -646,7 +623,8 @@
     }
 
     function normalize(x, y) {
-      const len = Math.hypot(x, y) || 1;
+      const len = Math.hypot(x, y);
+      if (!len) return { x: 0, y: 0 };
       return { x: x / len, y: y / len };
     }
 
@@ -661,11 +639,110 @@
       return CHARACTER_OPTIONS.find(c => c.key === charKey) || CHARACTER_OPTIONS[0];
     }
 
+    function resizeCanvas() {
+      dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+      canvas.width = Math.floor(window.innerWidth * dpr);
+      canvas.height = Math.floor(window.innerHeight * dpr);
+      canvas.style.width = window.innerWidth + 'px';
+      canvas.style.height = window.innerHeight + 'px';
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    function makeMaze() {
+      const walls = [];
+      const holes = [];
+      const W = state.arena.width;
+      const H = state.arena.height;
+      const thickness = 24;
+
+      function addVertical(x, y1, y2, gapCenter = null, gapSize = 80) {
+        if (gapCenter === null) {
+          walls.push({ x, y: y1, w: thickness, h: y2 - y1 });
+          return;
+        }
+        const gapTop = gapCenter - gapSize / 2;
+        const gapBottom = gapCenter + gapSize / 2;
+        if (gapTop > y1) walls.push({ x, y: y1, w: thickness, h: gapTop - y1 });
+        if (gapBottom < y2) walls.push({ x, y: gapBottom, w: thickness, h: y2 - gapBottom });
+        holes.push({ x: x - 6, y: gapCenter - gapSize / 2, w: thickness + 12, h: gapSize, orientation: 'vertical' });
+      }
+
+      function addHorizontal(x1, x2, y, gapCenter = null, gapSize = 80) {
+        if (gapCenter === null) {
+          walls.push({ x: x1, y, w: x2 - x1, h: thickness });
+          return;
+        }
+        const gapLeft = gapCenter - gapSize / 2;
+        const gapRight = gapCenter + gapSize / 2;
+        if (gapLeft > x1) walls.push({ x: x1, y, w: gapLeft - x1, h: thickness });
+        if (gapRight < x2) walls.push({ x: gapRight, y, w: x2 - gapRight, h: thickness });
+        holes.push({ x: gapCenter - gapSize / 2, y: y - 6, w: gapSize, h: thickness + 12, orientation: 'horizontal' });
+      }
+
+      walls.push({ x: 0, y: 0, w: W, h: 28 });
+      walls.push({ x: 0, y: H - 28, w: W, h: 28 });
+      walls.push({ x: 0, y: 0, w: 28, h: H });
+      walls.push({ x: W - 28, y: 0, w: 28, h: H });
+
+      addVertical(480, 120, 1480, 780, 90);
+      addVertical(960, 120, 1480, 420, 90);
+      addVertical(1440, 120, 1480, 1080, 90);
+      addVertical(1920, 120, 1480, 700, 90);
+
+      addHorizontal(120, 2280, 340, 1280, 90);
+      addHorizontal(120, 2280, 700, 680, 90);
+      addHorizontal(120, 2280, 1060, 1720, 90);
+      addHorizontal(120, 2280, 1360, 1120, 90);
+
+      walls.push({ x: 240, y: 520, w: 180, h: thickness });
+      walls.push({ x: 540, y: 1180, w: 220, h: thickness });
+      walls.push({ x: 1150, y: 170, w: thickness, h: 150 });
+      walls.push({ x: 1640, y: 1180, w: thickness, h: 150 });
+      walls.push({ x: 2030, y: 880, w: 140, h: thickness });
+
+      const doorSize = 92;
+      const doorInset = 70;
+      state.doors = [
+        { x: doorInset, y: doorInset, w: doorSize, h: doorSize, label: 'NW', escaped: [] },
+        { x: W - doorInset - doorSize, y: doorInset, w: doorSize, h: doorSize, label: 'NE', escaped: [] },
+        { x: doorInset, y: H - doorInset - doorSize, w: doorSize, h: doorSize, label: 'SW', escaped: [] },
+        { x: W - doorInset - doorSize, y: H - doorInset - doorSize, w: doorSize, h: doorSize, label: 'SE', escaped: [] }
+      ];
+
+      state.mazeWalls = walls;
+      state.holes = holes;
+    }
+
+    function rectsOverlap(a, b) {
+      return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+    }
+
+    function circleRectCollision(cx, cy, r, rect) {
+      const nearestX = clamp(cx, rect.x, rect.x + rect.w);
+      const nearestY = clamp(cy, rect.y, rect.y + rect.h);
+      return dist(cx, cy, nearestX, nearestY) < r;
+    }
+
+    function bossCanUseHole() {
+      return false;
+    }
+
+    function pointInRect(px, py, rect) {
+      return px >= rect.x && px <= rect.x + rect.w && py >= rect.y && py <= rect.y + rect.h;
+    }
+
     function createPlayer(index, config) {
       const char = getCharacter(config.character);
-      const margin = 140;
-      const x = margin + Math.random() * (state.arena.width - margin * 2);
-      const y = margin + Math.random() * (state.arena.height - margin * 2);
+      const spawnPoints = [
+        { x: 200, y: 200 },
+        { x: state.arena.width - 200, y: 200 },
+        { x: 200, y: state.arena.height - 200 },
+        { x: state.arena.width - 200, y: state.arena.height - 200 }
+      ];
+      const spawn = spawnPoints[index % spawnPoints.length];
       return {
         id: index,
         name: config.name,
@@ -673,30 +750,38 @@
         character: config.character,
         emoji: char.emoji,
         color: char.color,
-        x,
-        y,
+        x: spawn.x,
+        y: spawn.y,
         vx: 0,
         vy: 0,
-        facing: Math.random() * Math.PI * 2,
         radius: 22,
+        facing: Math.random() * Math.PI * 2,
+        baseSpeed: 165,
         baseLight: 120,
-        caughtCount: 0,
-        targetX: x,
-        targetY: y,
+        lightRadius: 120,
+        targetX: spawn.x,
+        targetY: spawn.y,
         aiRetargetTimer: 0,
         dangerPulse: 0,
         chasePulse: 0,
-        speed: 150,
-        status: 'idle'
+        status: 'idle',
+        escaped: false,
+        visible: false,
+        alive: true,
+        caughtCount: 0
       };
     }
 
     function rebuildPlayers() {
+      makeMaze();
       state.players = settings.players.map((p, i) => createPlayer(i, p));
       state.chase = null;
+      state.boss = null;
+      state.doorsOpen = false;
       state.timeLeft = settings.roundSeconds;
       state.roundEnded = false;
       state.winnerText = '';
+      state.visiblePlayers = new Set();
       winnerBox.className = 'winnerBox';
       winnerBox.innerHTML = '';
     }
@@ -704,29 +789,21 @@
     function renderMenu() {
       playerList.innerHTML = '';
       settings.players.forEach((player, index) => {
+        const currentChar = getCharacter(player.character);
         const card = document.createElement('div');
         card.className = 'playerCard';
-        const currentChar = getCharacter(player.character);
-
-        const characterOptions = CHARACTER_OPTIONS.map(option => {
-          const selected = option.key === player.character ? 'selected' : '';
-          return `<option value="${option.key}" ${selected}>${option.emoji} ${option.label}</option>`;
-        }).join('');
-
-        const controlOptions = CONTROL_TYPES.map(option => {
-          const label = option === 'human' ? 'Human' : 'AI';
-          const selected = option === player.control ? 'selected' : '';
-          return `<option value="${option}" ${selected}>${label}</option>`;
-        }).join('');
-
         card.innerHTML = `
           <div class="playerTop">
             <strong>${player.name}</strong>
             <span class="pill">${currentChar.emoji} ${currentChar.label}</span>
           </div>
           <div class="row">
-            <select data-index="${index}" data-field="character">${characterOptions}</select>
-            <select data-index="${index}" data-field="control">${controlOptions}</select>
+            <select data-index="${index}" data-field="character">
+              ${CHARACTER_OPTIONS.map(option => `<option value="${option.key}" ${option.key === player.character ? 'selected' : ''}>${option.emoji} ${option.label}</option>`).join('')}
+            </select>
+            <select data-index="${index}" data-field="control">
+              ${CONTROL_TYPES.map(option => `<option value="${option}" ${option === player.control ? 'selected' : ''}>${option === 'human' ? 'Human' : 'AI'}</option>`).join('')}
+            </select>
           </div>
         `;
         playerList.appendChild(card);
@@ -755,14 +832,11 @@
     });
 
     randomizeBtn.addEventListener('click', () => {
-      settings.players.forEach(player => {
+      settings.players.forEach((player, index) => {
         const char = CHARACTER_OPTIONS[Math.floor(Math.random() * CHARACTER_OPTIONS.length)];
         player.character = char.key;
-        if (Math.random() < 0.35) {
-          player.control = 'ai';
-        }
+        player.control = index === 0 ? 'human' : (Math.random() < 0.75 ? 'ai' : 'human');
       });
-      settings.players[0].control = 'human';
       renderMenu();
     });
 
@@ -795,12 +869,51 @@
     startBtn.addEventListener('click', startRound);
     resumeBtn.addEventListener('click', resumeRound);
 
-    function chooseNearestThreat(observer) {
+    function applyWallCollisions(player, oldX, oldY, isBoss = false) {
+      for (const wall of state.mazeWalls) {
+        if (circleRectCollision(player.x, player.y, player.radius, wall)) {
+          let insideHole = false;
+          if (!isBoss) {
+            for (const hole of state.holes) {
+              if (pointInRect(player.x, player.y, hole)) {
+                insideHole = true;
+                break;
+              }
+            }
+          }
+          if (!insideHole) {
+            player.x = oldX;
+            player.y = oldY;
+            return;
+          }
+        }
+      }
+    }
+
+    function getHumanVector(index) {
+      let x = 0;
+      let y = 0;
+      for (const key in KEY_MAP) {
+        const binding = KEY_MAP[key];
+        if (binding.player !== index) continue;
+        if (keyState[key]) {
+          if (binding.axis === 'x') x += binding.value;
+          if (binding.axis === 'y') y += binding.value;
+        }
+      }
+      if (index === 0) {
+        x += state.touchVector.x;
+        y += state.touchVector.y;
+      }
+      return normalize(x, y);
+    }
+
+    function chooseNearestLiving(player) {
       let nearest = null;
       let nearestDistance = Infinity;
       for (const other of state.players) {
-        if (other.id === observer.id) continue;
-        const d = dist(observer.x, observer.y, other.x, other.y);
+        if (other.id === player.id || !other.alive || other.escaped) continue;
+        const d = dist(player.x, player.y, other.x, other.y);
         if (d < nearestDistance) {
           nearestDistance = d;
           nearest = other;
@@ -809,27 +922,70 @@
       return nearest;
     }
 
-    function updateAi(player, dt) {
-      const threat = state.chase && state.chase.targetId === player.id
-        ? state.players.find(p => p.id === state.chase.chaserId)
-        : null;
+    function doorTargetFor(player) {
+      let nearest = null;
+      let nearestDistance = Infinity;
+      for (const door of state.doors) {
+        const d = dist(player.x, player.y, door.x + door.w / 2, door.y + door.h / 2);
+        if (d < nearestDistance) {
+          nearestDistance = d;
+          nearest = door;
+        }
+      }
+      return nearest;
+    }
+
+    function hasLineOfSight(a, b) {
+      const steps = 24;
+      for (let i = 1; i < steps; i++) {
+        const t = i / steps;
+        const x = a.x + (b.x - a.x) * t;
+        const y = a.y + (b.y - a.y) * t;
+        for (const wall of state.mazeWalls) {
+          if (pointInRect(x, y, wall)) return false;
+        }
+      }
+      return true;
+    }
+
+    function updateAI(player, dt) {
+      if (player.escaped || !player.alive) return;
+      const boss = state.boss;
+      const huntedByBoss = boss && dist(player.x, player.y, boss.x, boss.y) < 430;
+      const inHunt = state.chase && state.chase.targetId === player.id;
 
       player.aiRetargetTimer -= dt;
       if (player.aiRetargetTimer <= 0) {
-        player.aiRetargetTimer = 0.6 + Math.random() * 1.4;
-        if (threat) {
-          const away = normalize(player.x - threat.x, player.y - threat.y);
-          player.targetX = clamp(player.x + away.x * (180 + Math.random() * 120), 70, state.arena.width - 70);
-          player.targetY = clamp(player.y + away.y * (180 + Math.random() * 120), 70, state.arena.height - 70);
+        player.aiRetargetTimer = 0.45 + Math.random() * 0.9;
+
+        if (state.doorsOpen && !state.boss) {
+          const door = doorTargetFor(player);
+          player.targetX = door.x + door.w / 2;
+          player.targetY = door.y + door.h / 2;
+        } else if (state.doorsOpen && boss) {
+          const door = doorTargetFor(player);
+          player.targetX = door.x + door.w / 2;
+          player.targetY = door.y + door.h / 2;
+        } else if (huntedByBoss && boss) {
+          const away = normalize(player.x - boss.x, player.y - boss.y);
+          player.targetX = clamp(player.x + away.x * 260, 50, state.arena.width - 50);
+          player.targetY = clamp(player.y + away.y * 260, 50, state.arena.height - 50);
+        } else if (inHunt) {
+          const chaser = state.players.find(p => p.id === state.chase.chaserId);
+          if (chaser) {
+            const away = normalize(player.x - chaser.x, player.y - chaser.y);
+            player.targetX = clamp(player.x + away.x * 240, 50, state.arena.width - 50);
+            player.targetY = clamp(player.y + away.y * 240, 50, state.arena.height - 50);
+          }
         } else {
-          const nearby = chooseNearestThreat(player);
-          if (nearby && Math.random() < 0.65) {
-            const orbitAngle = Math.atan2(nearby.y - player.y, nearby.x - player.x) + (Math.random() * 1.8 - 0.9);
-            player.targetX = clamp(player.x + Math.cos(orbitAngle) * (140 + Math.random() * 90), 70, state.arena.width - 70);
-            player.targetY = clamp(player.y + Math.sin(orbitAngle) * (140 + Math.random() * 90), 70, state.arena.height - 70);
+          const nearest = chooseNearestLiving(player);
+          if (nearest && Math.random() < 0.55) {
+            const orbit = Math.atan2(nearest.y - player.y, nearest.x - player.x) + (Math.random() - 0.5) * 1.4;
+            player.targetX = clamp(player.x + Math.cos(orbit) * 180, 50, state.arena.width - 50);
+            player.targetY = clamp(player.y + Math.sin(orbit) * 180, 50, state.arena.height - 50);
           } else {
-            player.targetX = 70 + Math.random() * (state.arena.width - 140);
-            player.targetY = 70 + Math.random() * (state.arena.height - 140);
+            player.targetX = 80 + Math.random() * (state.arena.width - 160);
+            player.targetY = 80 + Math.random() * (state.arena.height - 160);
           }
         }
       }
@@ -839,93 +995,143 @@
       player.vy = dir.y;
     }
 
-    function getHumanVector(playerIndex) {
-      let x = 0;
-      let y = 0;
-      for (const key in KEY_MAP) {
-        const binding = KEY_MAP[key];
-        if (binding.player !== playerIndex) continue;
-        if (keyState[key]) {
-          if (binding.axis === 'x') x += binding.value;
-          if (binding.axis === 'y') y += binding.value;
-        }
-      }
-      if (playerIndex === 0) {
-        x += state.touchVector.x;
-        y += state.touchVector.y;
-      }
-      if (x === 0 && y === 0) return { x: 0, y: 0 };
-      return normalize(x, y);
-    }
-
     function updatePlayers(dt) {
       for (const player of state.players) {
-        if (player.control === 'ai') {
-          updateAi(player, dt);
-        } else {
+        if (!player.alive || player.escaped) continue;
+
+        if (player.control === 'ai') updateAI(player, dt);
+        else {
           const vec = getHumanVector(player.id);
           player.vx = vec.x;
           player.vy = vec.y;
         }
 
-        let speed = player.speed;
-        let lightRadius = player.baseLight;
+        let speed = player.baseSpeed;
+        let light = player.baseLight;
         player.status = 'idle';
 
         if (state.chase) {
           if (state.chase.chaserId === player.id) {
-            speed *= 1.14;
-            player.chasePulse += dt * 5.5;
-            player.status = 'chaser';
+            speed *= 1.12;
+            player.status = 'hunter';
+            player.chasePulse += dt * 8;
           }
           if (state.chase.targetId === player.id) {
-            lightRadius *= 1.45;
-            player.dangerPulse += dt * 7.2;
+            light *= 1.45;
             player.status = 'hunted';
+            player.dangerPulse += dt * 9;
           }
         }
 
-        player.lightRadius = lightRadius;
+        player.lightRadius = light;
 
-        const nextX = player.x + player.vx * speed * dt;
-        const nextY = player.y + player.vy * speed * dt;
-        player.x = clamp(nextX, 30, state.arena.width - 30);
-        player.y = clamp(nextY, 30, state.arena.height - 30);
+        const oldX = player.x;
+        const oldY = player.y;
+        player.x += player.vx * speed * dt;
+        player.y += player.vy * speed * dt;
+        player.x = clamp(player.x, 34, state.arena.width - 34);
+        player.y = clamp(player.y, 34, state.arena.height - 34);
+        applyWallCollisions(player, oldX, oldY, false);
 
         if (Math.abs(player.vx) > 0.01 || Math.abs(player.vy) > 0.01) {
           const targetFacing = Math.atan2(player.vy, player.vx);
           const diff = targetFacing - player.facing;
-          player.facing = lerp(player.facing, player.facing + Math.atan2(Math.sin(diff), Math.cos(diff)), Math.min(1, dt * 8));
+          player.facing = lerp(player.facing, player.facing + Math.atan2(Math.sin(diff), Math.cos(diff)), Math.min(1, dt * 10));
         }
       }
     }
 
     function canTriggerChase(observer, target) {
+      if (!target.alive || target.escaped || observer.escaped || !observer.alive) return false;
       const d = dist(observer.x, observer.y, target.x, target.y);
       if (d > observer.lightRadius) return false;
+      if (!hasLineOfSight(observer, target)) return false;
 
-      const directionToTarget = Math.atan2(target.y - observer.y, target.x - observer.x);
-      const observerViewDelta = angleBetween(observer.facing, directionToTarget);
-      if (observerViewDelta > Math.PI / 3.3) return false;
+      const observerToTarget = Math.atan2(target.y - observer.y, target.x - observer.x);
+      if (angleBetween(observer.facing, observerToTarget) > Math.PI / 3.2) return false;
 
-      const directionTargetToObserver = Math.atan2(observer.y - target.y, observer.x - target.x);
-      const targetFacingDelta = angleBetween(target.facing, directionTargetToObserver);
-      const facingObserver = targetFacingDelta < Math.PI / 2.7;
+      const targetToObserver = Math.atan2(observer.y - target.y, observer.x - target.x);
+      const targetFacingObserver = angleBetween(target.facing, targetToObserver) < Math.PI / 2.7;
+      return !targetFacingObserver;
+    }
 
-      return !facingObserver;
+    function triggerBossIfNeeded() {
+      const elapsed = settings.roundSeconds - state.timeLeft;
+      if (elapsed < 240) return;
+      if (state.boss) return;
+      if (!state.chase) return;
+
+      const hunter = state.players.find(p => p.id === state.chase.chaserId);
+      if (!hunter || hunter.escaped || !hunter.alive) return;
+
+      state.boss = {
+        fromPlayerId: hunter.id,
+        x: hunter.x,
+        y: hunter.y,
+        vx: 0,
+        vy: 0,
+        radius: 42,
+        speed: 330,
+        pulse: 0,
+        targetId: null
+      };
+
+      hunter.alive = false;
+      state.chase = null;
+      updateHud();
+    }
+
+    function updateBoss(dt) {
+      if (!state.boss) return;
+      const boss = state.boss;
+      boss.pulse += dt * 9;
+
+      let target = null;
+      let nearestDistance = Infinity;
+      for (const player of state.players) {
+        if (!player.alive || player.escaped) continue;
+        const d = dist(boss.x, boss.y, player.x, player.y);
+        if (d < nearestDistance) {
+          nearestDistance = d;
+          target = player;
+        }
+      }
+
+      if (!target) {
+        endRound('Everyone escaped the boss.');
+        return;
+      }
+
+      boss.targetId = target.id;
+      const dir = normalize(target.x - boss.x, target.y - boss.y);
+      boss.vx = dir.x;
+      boss.vy = dir.y;
+
+      const oldX = boss.x;
+      const oldY = boss.y;
+      boss.x += boss.vx * boss.speed * dt;
+      boss.y += boss.vy * boss.speed * dt;
+      boss.x = clamp(boss.x, 50, state.arena.width - 50);
+      boss.y = clamp(boss.y, 50, state.arena.height - 50);
+      applyWallCollisions(boss, oldX, oldY, true);
+
+      if (dist(boss.x, boss.y, target.x, target.y) < boss.radius + target.radius + 6) {
+        target.alive = false;
+        if (target.id === 0) {
+          endRound('The boss caught Player 1.');
+        }
+      }
     }
 
     function updateChaseLogic(dt) {
+      if (state.boss) return;
+
       if (!state.chase) {
         for (const observer of state.players) {
           for (const target of state.players) {
             if (observer.id === target.id) continue;
             if (canTriggerChase(observer, target)) {
-              state.chase = {
-                chaserId: observer.id,
-                targetId: target.id,
-                elapsed: 0
-              };
+              state.chase = { chaserId: observer.id, targetId: target.id, elapsed: 0 };
               updateHud();
               return;
             }
@@ -935,37 +1141,79 @@
         state.chase.elapsed += dt;
         const chaser = state.players.find(p => p.id === state.chase.chaserId);
         const target = state.players.find(p => p.id === state.chase.targetId);
-        if (!chaser || !target) {
+        if (!chaser || !target || !chaser.alive || !target.alive || chaser.escaped || target.escaped) {
           state.chase = null;
           return;
         }
 
         if (dist(chaser.x, chaser.y, target.x, target.y) < chaser.radius + target.radius + 8) {
+          target.alive = false;
           chaser.caughtCount += 1;
-          endRound(`${chaser.name} caught ${target.name}`);
+          state.chase = null;
+          if (target.id === 0) {
+            endRound(`${chaser.name} caught Player 1.`);
+            return;
+          }
         }
       }
     }
 
-    function endRound(message) {
-      state.running = false;
-      state.roundEnded = true;
-      state.winnerText = message;
-      winnerBox.className = 'winnerBox show';
-      winnerBox.innerHTML = `<strong>${message}</strong><div class="smallText" style="margin-top:8px;">Tap Start round to play again. You can change characters or switch players between AI and human.</div>`;
-      menuOverlay.style.display = 'flex';
-      resumeBtn.style.display = 'none';
-      updateHud();
+    function updateDoors() {
+      const elapsed = settings.roundSeconds - state.timeLeft;
+      if (!state.doorsOpen && elapsed >= 120) {
+        state.doorsOpen = true;
+      }
+
+      if (!state.doorsOpen) return;
+      for (const player of state.players) {
+        if (!player.alive || player.escaped) continue;
+        for (const door of state.doors) {
+          const cx = door.x + door.w / 2;
+          const cy = door.y + door.h / 2;
+          if (dist(player.x, player.y, cx, cy) < 38) {
+            player.escaped = true;
+          }
+        }
+      }
+
+      const activePlayers = state.players.filter(p => p.alive && !p.escaped);
+      if (activePlayers.length === 0) {
+        endRound('Everybody reached the doors and got free.');
+      }
+    }
+
+    function updateVisibility() {
+      state.visiblePlayers = new Set();
+      const viewer = state.players[0];
+      if (!viewer || !viewer.alive || viewer.escaped) return;
+
+      for (const player of state.players) {
+        if (!player.alive || player.escaped) continue;
+        if (player.id === viewer.id) {
+          state.visiblePlayers.add(player.id);
+          continue;
+        }
+        const d = dist(viewer.x, viewer.y, player.x, player.y);
+        if (d <= viewer.lightRadius + 20 && hasLineOfSight(viewer, player)) {
+          state.visiblePlayers.add(player.id);
+        }
+      }
+
+      if (state.boss) {
+        const d = dist(viewer.x, viewer.y, state.boss.x, state.boss.y);
+        if (d <= viewer.lightRadius + 30 && hasLineOfSight(viewer, state.boss)) {
+          state.visiblePlayers.add('boss');
+        }
+      }
     }
 
     function updateHud() {
-      const seconds = Math.max(0, Math.ceil(state.timeLeft));
-      clockPill.textContent = seconds + 's';
+      clockPill.textContent = Math.max(0, Math.ceil(state.timeLeft)) + 's';
 
       if (!state.running && !state.roundEnded) {
         phasePill.textContent = 'Setup';
         phasePill.style.color = 'var(--accent)';
-        statusText.textContent = 'Pick characters and start a round.';
+        statusText.textContent = 'GitHub Pages version. Strong AI and mobile support. Real online multiplayer comes later with a backend.';
         return;
       }
 
@@ -983,76 +1231,73 @@
         return;
       }
 
+      if (state.boss) {
+        phasePill.textContent = 'Boss';
+        phasePill.style.color = 'var(--danger)';
+        statusText.textContent = state.doorsOpen ? 'The boss is active. Reach a corner door to escape.' : 'The hunter became a giant red boss. Use maze holes to evade it.';
+        return;
+      }
+
       if (state.chase) {
         const chaser = state.players.find(p => p.id === state.chase.chaserId);
         const target = state.players.find(p => p.id === state.chase.targetId);
-        phasePill.textContent = 'Chase';
+        phasePill.textContent = 'Hunt';
         phasePill.style.color = 'var(--warn)';
-        statusText.textContent = `${chaser?.name || 'A player'} is chasing ${target?.name || 'a target'}.`;
-      } else {
-        phasePill.textContent = 'Hidden';
-        phasePill.style.color = 'var(--accent)';
-        statusText.textContent = 'Move quietly and look for players facing away from you.';
+        statusText.textContent = `${chaser?.name || 'A player'} is hunting ${target?.name || 'someone'}.`;
+        return;
       }
+
+      if (state.doorsOpen) {
+        phasePill.textContent = 'Doors';
+        phasePill.style.color = 'var(--success)';
+        statusText.textContent = 'The corner doors are open. Reach one to get free.';
+        return;
+      }
+
+      phasePill.textContent = 'Hidden';
+      phasePill.style.color = 'var(--accent)';
+      statusText.textContent = 'Move carefully. Other players only appear inside your visible light.';
     }
 
     function drawBackground() {
       ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-
-      const camX = state.camera.x;
-      const camY = state.camera.y;
-
       const gradient = ctx.createLinearGradient(0, 0, 0, window.innerHeight);
-      gradient.addColorStop(0, '#07111f');
+      gradient.addColorStop(0, '#09101d');
       gradient.addColorStop(1, '#020307');
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
-
-      const gridSize = 120;
-      ctx.save();
-      ctx.translate(-camX, -camY);
-      ctx.strokeStyle = 'rgba(255,255,255,0.035)';
-      ctx.lineWidth = 1;
-      for (let x = 0; x <= state.arena.width; x += gridSize) {
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, state.arena.height);
-        ctx.stroke();
-      }
-      for (let y = 0; y <= state.arena.height; y += gridSize) {
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(state.arena.width, y);
-        ctx.stroke();
-      }
-
-      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
-      ctx.lineWidth = 4;
-      ctx.strokeRect(0, 0, state.arena.width, state.arena.height);
-      ctx.restore();
     }
 
-    function drawLighting() {
+    function drawMaze() {
       ctx.save();
-      ctx.fillStyle = 'rgba(0,0,0,0.89)';
-      ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
-      ctx.globalCompositeOperation = 'destination-out';
+      ctx.translate(-state.camera.x, -state.camera.y);
 
-      for (const player of state.players) {
-        const sx = player.x - state.camera.x;
-        const sy = player.y - state.camera.y;
-        const pulseBoost = player.status === 'hunted' ? Math.sin(player.dangerPulse) * 12 : 0;
-        const radius = player.lightRadius + pulseBoost;
+      ctx.fillStyle = 'rgba(255,255,255,0.02)';
+      for (let x = 0; x < state.arena.width; x += 120) {
+        for (let y = 0; y < state.arena.height; y += 120) {
+          ctx.fillRect(x + 6, y + 6, 2, 2);
+        }
+      }
 
-        const grad = ctx.createRadialGradient(sx, sy, 12, sx, sy, radius);
-        grad.addColorStop(0, 'rgba(255,255,255,0.92)');
-        grad.addColorStop(0.28, 'rgba(255,255,255,0.45)');
-        grad.addColorStop(0.68, 'rgba(255,255,255,0.13)');
-        grad.addColorStop(1, 'rgba(255,255,255,0)');
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-        ctx.arc(sx, sy, radius, 0, Math.PI * 2);
-        ctx.fill();
+      for (const wall of state.mazeWalls) {
+        ctx.fillStyle = 'rgba(120, 150, 180, 0.18)';
+        ctx.fillRect(wall.x, wall.y, wall.w, wall.h);
+        ctx.strokeStyle = 'rgba(180, 210, 245, 0.24)';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(wall.x, wall.y, wall.w, wall.h);
+      }
+
+      for (const hole of state.holes) {
+        ctx.fillStyle = 'rgba(90, 255, 170, 0.10)';
+        ctx.fillRect(hole.x, hole.y, hole.w, hole.h);
+      }
+
+      for (const door of state.doors) {
+        ctx.fillStyle = state.doorsOpen ? 'rgba(84,255,146,0.22)' : 'rgba(255,255,255,0.06)';
+        ctx.fillRect(door.x, door.y, door.w, door.h);
+        ctx.strokeStyle = state.doorsOpen ? 'rgba(84,255,146,0.55)' : 'rgba(255,255,255,0.12)';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(door.x, door.y, door.w, door.h);
       }
 
       ctx.restore();
@@ -1063,20 +1308,23 @@
       ctx.translate(-state.camera.x, -state.camera.y);
 
       for (const player of state.players) {
-        const blinkAlpha = 0.5 + 0.5 * Math.sin((player.status === 'chaser' ? player.chasePulse : player.dangerPulse) * 1.2);
+        if (!player.alive || player.escaped) continue;
+        if (!state.visiblePlayers.has(player.id)) continue;
 
-        if (player.status === 'chaser') {
+        const pulseAlpha = 0.5 + 0.5 * Math.sin((player.status === 'hunter' ? player.chasePulse : player.dangerPulse) * 1.2);
+
+        if (player.status === 'hunter') {
           ctx.beginPath();
-          ctx.arc(player.x, player.y, player.radius + 15 + blinkAlpha * 6, 0, Math.PI * 2);
-          ctx.strokeStyle = `rgba(255,159,28,${0.42 + blinkAlpha * 0.4})`;
+          ctx.arc(player.x, player.y, player.radius + 15 + pulseAlpha * 6, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(255,173,31,${0.42 + pulseAlpha * 0.38})`;
           ctx.lineWidth = 5;
           ctx.stroke();
         }
 
         if (player.status === 'hunted') {
           ctx.beginPath();
-          ctx.arc(player.x, player.y, player.radius + 17 + blinkAlpha * 7, 0, Math.PI * 2);
-          ctx.strokeStyle = `rgba(255,71,71,${0.35 + blinkAlpha * 0.5})`;
+          ctx.arc(player.x, player.y, player.radius + 17 + pulseAlpha * 7, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(255,71,71,${0.35 + pulseAlpha * 0.48})`;
           ctx.lineWidth = 6;
           ctx.stroke();
         }
@@ -1091,31 +1339,89 @@
 
         ctx.beginPath();
         ctx.moveTo(player.x, player.y);
-        ctx.lineTo(player.x + Math.cos(player.facing) * 32, player.y + Math.sin(player.facing) * 32);
+        ctx.lineTo(player.x + Math.cos(player.facing) * 30, player.y + Math.sin(player.facing) * 30);
         ctx.strokeStyle = 'rgba(255,255,255,0.75)';
         ctx.lineWidth = 3;
         ctx.stroke();
 
-        ctx.font = '28px system-ui';
+        ctx.font = '27px system-ui';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(player.emoji, player.x, player.y + 1);
 
-        ctx.font = '12px Inter, system-ui, sans-serif';
-        ctx.fillStyle = 'rgba(255,255,255,0.9)';
-        ctx.fillText(player.name, player.x, player.y - 40);
+        if (player.id === 0) {
+          ctx.font = '12px Inter, system-ui, sans-serif';
+          ctx.fillStyle = 'rgba(255,255,255,0.95)';
+          ctx.fillText(player.name, player.x, player.y - 40);
+        }
+      }
+
+      if (state.boss && state.visiblePlayers.has('boss')) {
+        const boss = state.boss;
+        const pulse = 0.5 + 0.5 * Math.sin(boss.pulse);
+        ctx.beginPath();
+        ctx.arc(boss.x, boss.y, boss.radius + 18 + pulse * 10, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(255,47,47,${0.45 + pulse * 0.45})`;
+        ctx.lineWidth = 8;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(boss.x, boss.y, boss.radius, 0, Math.PI * 2);
+        ctx.fillStyle = '#ff2d2d';
+        ctx.shadowColor = '#ff2d2d';
+        ctx.shadowBlur = 24;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        ctx.font = '44px system-ui';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('👹', boss.x, boss.y + 2);
       }
 
       ctx.restore();
     }
 
-    function drawMiniRadar() {
-      const width = 164;
-      const height = 112;
+    function drawLighting() {
+      const viewer = state.players[0];
+      if (!viewer || !viewer.alive || viewer.escaped) return;
+
+      ctx.save();
+      ctx.fillStyle = 'rgba(0,0,0,0.9)';
+      ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
+      ctx.globalCompositeOperation = 'destination-out';
+
+      const visibleEntities = [viewer];
+      for (const player of state.players) {
+        if (player.id !== viewer.id && state.visiblePlayers.has(player.id)) visibleEntities.push(player);
+      }
+      if (state.boss && state.visiblePlayers.has('boss')) visibleEntities.push({ x: state.boss.x, y: state.boss.y, lightRadius: 95 });
+
+      for (const entity of visibleEntities) {
+        const sx = entity.x - state.camera.x;
+        const sy = entity.y - state.camera.y;
+        const radius = entity.lightRadius || 100;
+        const grad = ctx.createRadialGradient(sx, sy, 12, sx, sy, radius);
+        grad.addColorStop(0, 'rgba(255,255,255,0.92)');
+        grad.addColorStop(0.28, 'rgba(255,255,255,0.45)');
+        grad.addColorStop(0.7, 'rgba(255,255,255,0.14)');
+        grad.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(sx, sy, radius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.restore();
+    }
+
+    function drawMiniMap() {
+      const width = 170;
+      const height = 116;
       const x = 12;
       const y = window.innerHeight - height - 12;
       ctx.save();
-      ctx.fillStyle = 'rgba(8, 12, 22, 0.8)';
+      ctx.fillStyle = 'rgba(8, 12, 22, 0.78)';
       ctx.strokeStyle = 'rgba(255,255,255,0.08)';
       ctx.lineWidth = 1;
       ctx.beginPath();
@@ -1124,21 +1430,32 @@
       ctx.stroke();
 
       const pad = 10;
-      ctx.fillStyle = 'rgba(255,255,255,0.05)';
+      ctx.fillStyle = 'rgba(255,255,255,0.04)';
       ctx.fillRect(x + pad, y + pad, width - pad * 2, height - pad * 2);
 
       for (const player of state.players) {
+        if (!player.alive || player.escaped) continue;
+        if (!state.visiblePlayers.has(player.id)) continue;
         const px = x + pad + (player.x / state.arena.width) * (width - pad * 2);
         const py = y + pad + (player.y / state.arena.height) * (height - pad * 2);
         ctx.beginPath();
-        ctx.arc(px, py, 5, 0, Math.PI * 2);
-        ctx.fillStyle = player.status === 'hunted' ? '#ff4747' : player.status === 'chaser' ? '#ff9f1c' : player.color;
+        ctx.arc(px, py, 4, 0, Math.PI * 2);
+        ctx.fillStyle = player.status === 'hunted' ? '#ff4747' : player.status === 'hunter' ? '#ffad1f' : player.color;
         ctx.fill();
       }
 
-      ctx.fillStyle = 'rgba(255,255,255,0.8)';
+      if (state.boss && state.visiblePlayers.has('boss')) {
+        const px = x + pad + (state.boss.x / state.arena.width) * (width - pad * 2);
+        const py = y + pad + (state.boss.y / state.arena.height) * (height - pad * 2);
+        ctx.beginPath();
+        ctx.arc(px, py, 6, 0, Math.PI * 2);
+        ctx.fillStyle = '#ff2d2d';
+        ctx.fill();
+      }
+
+      ctx.fillStyle = 'rgba(255,255,255,0.82)';
       ctx.font = '12px Inter, system-ui, sans-serif';
-      ctx.fillText('Arena map', x + 14, y + 18);
+      ctx.fillText('Visible radar', x + 12, y + 18);
       ctx.restore();
     }
 
@@ -1150,6 +1467,17 @@
       state.camera.y = lerp(state.camera.y, targetY, Math.min(1, dt * 4));
     }
 
+    function endRound(message) {
+      state.running = false;
+      state.roundEnded = true;
+      state.winnerText = message;
+      winnerBox.className = 'winnerBox show';
+      winnerBox.innerHTML = `<strong>${message}</strong><div class="smallText" style="margin-top:8px;">Press Start round to play again. For now this is the GitHub Pages AI version. Real online multiplayer would be the next phase.</div>`;
+      menuOverlay.style.display = 'flex';
+      resumeBtn.style.display = 'none';
+      updateHud();
+    }
+
     function gameLoop(timestamp) {
       const rawDt = (timestamp - lastTime) / 1000 || 0;
       const dt = Math.min(0.033, rawDt);
@@ -1158,37 +1486,37 @@
       if (state.running && !state.paused && !state.roundEnded) {
         state.timeLeft -= dt;
         if (state.timeLeft <= 0) {
-          endRound('Time expired. Nobody made the final catch.');
+          endRound('Time expired. Darkness wins.');
         } else {
           updatePlayers(dt);
           updateChaseLogic(dt);
+          triggerBossIfNeeded();
+          updateBoss(dt);
+          updateDoors();
+          updateVisibility();
           updateCamera(dt);
           updateHud();
         }
       }
 
       drawBackground();
+      drawMaze();
       drawPlayers();
       drawLighting();
-      drawMiniRadar();
-
+      drawMiniMap();
       requestAnimationFrame(gameLoop);
     }
 
     document.addEventListener('keydown', (event) => {
       const key = event.key.length === 1 ? event.key.toLowerCase() : event.key;
       keyState[key] = true;
-      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(event.key)) {
-        event.preventDefault();
-      }
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(event.key)) event.preventDefault();
       if (event.key.toLowerCase() === 'p') {
         if (state.running && !state.paused) pauseRound(true);
         else if (state.running && state.paused) resumeRound();
       }
-      if (event.key === 'Escape') {
-        pauseRound(true);
-      }
-    });
+      if (event.key === 'Escape') pauseRound(true);
+    }, { passive: false });
 
     document.addEventListener('keyup', (event) => {
       const key = event.key.length === 1 ? event.key.toLowerCase() : event.key;
@@ -1202,14 +1530,14 @@
       const dx = clientX - cx;
       const dy = clientY - cy;
       const max = rect.width * 0.34;
-      const n = normalize(dx, dy);
       const len = Math.min(max, Math.hypot(dx, dy));
+      const n = normalize(dx, dy);
       const knobX = n.x * len;
       const knobY = n.y * len;
       touchKnob.style.left = `calc(50% + ${knobX}px)`;
       touchKnob.style.top = `calc(50% + ${knobY}px)`;
-      state.touchVector.x = len < 10 ? 0 : n.x;
-      state.touchVector.y = len < 10 ? 0 : n.y;
+      state.touchVector.x = len < 8 ? 0 : n.x;
+      state.touchVector.y = len < 8 ? 0 : n.y;
     }
 
     function resetTouchKnob() {
@@ -1219,49 +1547,56 @@
       state.touchVector.y = 0;
     }
 
-    touchPad.addEventListener('pointerdown', (event) => {
-      touchPad.setPointerCapture(event.pointerId);
-      setTouchVectorFromPoint(event.clientX, event.clientY);
+    ['pointerdown', 'pointermove'].forEach(type => {
+      touchPad.addEventListener(type, (event) => {
+        event.preventDefault();
+        if (type === 'pointerdown') touchPad.setPointerCapture(event.pointerId);
+        setTouchVectorFromPoint(event.clientX, event.clientY);
+      }, { passive: false });
     });
 
-    touchPad.addEventListener('pointermove', (event) => {
-      if (event.buttons === 0 && event.pointerType !== 'touch') return;
-      setTouchVectorFromPoint(event.clientX, event.clientY);
-    });
+    touchPad.addEventListener('pointerup', (event) => {
+      event.preventDefault();
+      resetTouchKnob();
+    }, { passive: false });
 
-    touchPad.addEventListener('pointerup', resetTouchKnob);
-    touchPad.addEventListener('pointercancel', resetTouchKnob);
+    touchPad.addEventListener('pointercancel', (event) => {
+      event.preventDefault();
+      resetTouchKnob();
+    }, { passive: false });
 
     function arenaPointFromEvent(event) {
       const rect = canvas.getBoundingClientRect();
-      const x = event.clientX - rect.left + state.camera.x;
-      const y = event.clientY - rect.top + state.camera.y;
-      return { x, y };
+      return {
+        x: event.clientX - rect.left + state.camera.x,
+        y: event.clientY - rect.top + state.camera.y
+      };
     }
+
+    let dragActive = false;
 
     canvas.addEventListener('pointerdown', (event) => {
       if (!state.running || state.paused) return;
-      state.mouseDragActive = true;
+      dragActive = true;
       const point = arenaPointFromEvent(event);
-      state.pointerTarget = point;
-      const p = state.players[0];
-      if (p && p.control === 'human') {
-        const vec = normalize(point.x - p.x, point.y - p.y);
+      const player = state.players[0];
+      if (player && player.control === 'human') {
+        const vec = normalize(point.x - player.x, point.y - player.y);
         state.touchVector.x = vec.x;
         state.touchVector.y = vec.y;
       }
-    });
+      event.preventDefault();
+    }, { passive: false });
 
     canvas.addEventListener('pointermove', (event) => {
-      if (!state.mouseDragActive || !state.running || state.paused) return;
+      if (!dragActive || !state.running || state.paused) return;
       const point = arenaPointFromEvent(event);
-      state.pointerTarget = point;
-      const p = state.players[0];
-      if (p && p.control === 'human') {
-        const dx = point.x - p.x;
-        const dy = point.y - p.y;
+      const player = state.players[0];
+      if (player && player.control === 'human') {
+        const dx = point.x - player.x;
+        const dy = point.y - player.y;
         const len = Math.hypot(dx, dy);
-        if (len < 20) {
+        if (len < 18) {
           state.touchVector.x = 0;
           state.touchVector.y = 0;
         } else {
@@ -1270,22 +1605,24 @@
           state.touchVector.y = vec.y;
         }
       }
-    });
+      event.preventDefault();
+    }, { passive: false });
 
-    function endCanvasPointer() {
-      state.mouseDragActive = false;
-      state.pointerTarget = null;
-      if (!matchMedia('(hover: none) and (pointer: coarse)').matches) {
+    function endCanvasDrag(event) {
+      dragActive = false;
+      if (event) event.preventDefault();
+      if (!window.matchMedia('(hover: none) and (pointer: coarse)').matches) {
         state.touchVector.x = 0;
         state.touchVector.y = 0;
       }
     }
 
-    canvas.addEventListener('pointerup', endCanvasPointer);
-    canvas.addEventListener('pointercancel', endCanvasPointer);
+    canvas.addEventListener('pointerup', endCanvasDrag, { passive: false });
+    canvas.addEventListener('pointercancel', endCanvasDrag, { passive: false });
 
     renderMenu();
     rebuildPlayers();
+    updateVisibility();
     updateHud();
     requestAnimationFrame((t) => {
       lastTime = t;
